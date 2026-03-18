@@ -1,5 +1,6 @@
 import { Form, ActionPanel, Action, showToast, Toast, launchCommand, LaunchType } from "@raycast/api";
-import { createTask, CreateTaskBody } from "./api";
+import { useEffect, useState } from "react";
+import { createTask, getTags, CreateTaskBody, HabiticaTag } from "./api";
 
 interface FormValues {
   text: string;
@@ -7,9 +8,26 @@ interface FormValues {
   notes: string;
   priority: string;
   date: Date | null;
+  tags: string[];
 }
 
 export default function Command() {
+  const [tags, setTags] = useState<HabiticaTag[]>([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getTags();
+        setTags(data);
+      } catch {
+        // silently fail – tags are optional
+      } finally {
+        setIsLoadingTags(false);
+      }
+    })();
+  }, []);
+
   async function handleSubmit(values: FormValues) {
     if (!values.text.trim()) {
       await showToast({ style: Toast.Style.Failure, title: "Title is required" });
@@ -31,6 +49,10 @@ export default function Command() {
 
     if (values.date) {
       body.date = values.date.toISOString().split("T")[0];
+    }
+
+    if (values.tags && values.tags.length > 0) {
+      body.tags = values.tags;
     }
 
     try {
@@ -77,6 +99,14 @@ export default function Command() {
       </Form.Dropdown>
 
       <Form.DatePicker id="date" title="Due Date" type={Form.DatePicker.Type.Date} />
+
+      <Form.Separator />
+
+      <Form.TagPicker id="tags" title="Tags" placeholder={isLoadingTags ? "Loading tags…" : "Select tags"}>
+        {tags.map((tag) => (
+          <Form.TagPicker.Item key={tag.id} value={tag.id} title={tag.name} />
+        ))}
+      </Form.TagPicker>
     </Form>
   );
 }

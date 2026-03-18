@@ -32,6 +32,7 @@ export interface CreateTaskBody {
   notes?: string;
   priority?: number;
   date?: string;
+  tags?: string[];
 }
 
 export interface UpdateTaskBody {
