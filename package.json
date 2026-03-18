@@ -7,9 +7,9 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "view-lists",
-      "title": "View Lists",
-      "description": "View Task Lists",
+      "name": "view-tasks",
+      "title": "View Tasks",
+      "description": "View Tasks",
       "mode": "view",
       "subtitle": ""
     },
