@@ -11,7 +11,14 @@ import {
   useNavigation,
 } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getTasks, getTags, scoreTask, deleteTask, HabiticaTask, HabiticaTag } from "./api";
+import {
+  getTasks,
+  getTags,
+  scoreTask,
+  deleteTask,
+  HabiticaTask,
+  HabiticaTag,
+} from "./api";
 import EditTaskForm from "./edit-task";
 
 const PRIORITY_LABELS: Record<number, string> = {
@@ -21,8 +28,31 @@ const PRIORITY_LABELS: Record<number, string> = {
   2: "Hard",
 };
 
+function isTaskExpired(task: HabiticaTask): boolean {
+  if (task.completed || !task.date) return false;
+  const dueDate = new Date(task.date);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  dueDate.setHours(0, 0, 0, 0);
+  return dueDate.getTime() < today.getTime();
+}
+
+function formatTaskDate(date: string | null): string | undefined {
+  if (!date) return undefined;
+  const taskDate = new Date(date);
+  const now = new Date();
+  const isCurrentYear = taskDate.getFullYear() === now.getFullYear();
+  return taskDate.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    ...(isCurrentYear ? {} : { year: "numeric" }),
+  });
+}
+
 function taskIcon(task: HabiticaTask): { source: Icon; tintColor?: Color } {
-  if (task.completed) return { source: Icon.CheckCircle, tintColor: Color.Green };
+  if (task.completed)
+    return { source: Icon.CheckCircle, tintColor: Color.Green };
+  if (isTaskExpired(task)) return { source: Icon.Circle, tintColor: Color.Red };
   return { source: Icon.Circle };
 }
 
@@ -36,7 +66,10 @@ export default function Command() {
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [taskData, tagData] = await Promise.all([getTasks("todos"), getTags()]);
+      const [taskData, tagData] = await Promise.all([
+        getTasks("todos"),
+        getTags(),
+      ]);
       setTasks(taskData);
       setTags(tagData);
     } catch (error) {
@@ -54,12 +87,18 @@ export default function Command() {
     fetchData();
   }, [fetchData]);
 
-  const filteredTasks = tagFilter === "all" ? tasks : tasks.filter((t) => t.tags.includes(tagFilter));
+  const filteredTasks =
+    tagFilter === "all"
+      ? tasks
+      : tasks.filter((t) => t.tags.includes(tagFilter));
 
   async function handleScore(task: HabiticaTask) {
     const direction = task.completed ? "down" : "up";
     try {
-      await showToast({ style: Toast.Style.Animated, title: direction === "up" ? "Completing…" : "Un-completing…" });
+      await showToast({
+        style: Toast.Style.Animated,
+        title: direction === "up" ? "Completing…" : "Un-completing…",
+      });
       await scoreTask(task.id, direction);
       await showToast({
         style: Toast.Style.Success,
@@ -108,7 +147,11 @@ export default function Command() {
       navigationTitle="Habitica To-Dos"
       searchBarPlaceholder="Search to-dos…"
       searchBarAccessory={
-        <List.Dropdown tooltip="Filter by tag" onChange={setTagFilter} value={tagFilter}>
+        <List.Dropdown
+          tooltip="Filter by tag"
+          onChange={setTagFilter}
+          value={tagFilter}
+        >
           <List.Dropdown.Item title="All Tags" value="all" />
           {tags.map((tag) => (
             <List.Dropdown.Item key={tag.id} title={tag.name} value={tag.id} />
@@ -117,10 +160,14 @@ export default function Command() {
       }
     >
       {filteredTasks.length === 0 && !isLoading ? (
-        <List.EmptyView title="No to-dos found" description="Create a new to-do to get started!" />
+        <List.EmptyView
+          title="No to-dos found"
+          description="Create a new to-do to get started!"
+        />
       ) : (
         filteredTasks.map((task) => {
           const icon = taskIcon(task);
+          const formattedDate = formatTaskDate(task.date);
 
           // Resolve tag names for this task
           const taskTagNames = task.tags
@@ -142,17 +189,23 @@ export default function Command() {
               key={task.id}
               icon={icon}
               title={task.text}
+              accessories={
+                formattedDate ? [{ text: formattedDate }] : undefined
+              }
               detail={
                 <List.Item.Detail
                   markdown={detailParts.join("\n\n")}
                   metadata={
                     <List.Item.Detail.Metadata>
-                      <List.Item.Detail.Metadata.Label title="Difficulty" text={difficultyLabel} />
+                      <List.Item.Detail.Metadata.Label
+                        title="Difficulty"
+                        text={difficultyLabel}
+                      />
                       <List.Item.Detail.Metadata.Separator />
                       {task.date && (
                         <List.Item.Detail.Metadata.Label
                           title="Due Date"
-                          text={new Date(task.date).toLocaleDateString()}
+                          text={formattedDate}
                         />
                       )}
                       <List.Item.Detail.Metadata.TagList title="Tags">
@@ -165,7 +218,10 @@ export default function Command() {
                             />
                           ))
                         ) : (
-                          <List.Item.Detail.Metadata.TagList.Item text="No tags" color={Color.SecondaryText} />
+                          <List.Item.Detail.Metadata.TagList.Item
+                            text="No tags"
+                            color={Color.SecondaryText}
+                          />
                         )}
                       </List.Item.Detail.Metadata.TagList>
                       <List.Item.Detail.Metadata.Separator />
