@@ -1,4 +1,4 @@
-import { Form, ActionPanel, Action, showToast, Toast, useNavigation } from "@raycast/api";
+import { Form, ActionPanel, Action, showToast, Toast, launchCommand, LaunchType } from "@raycast/api";
 import { createTask, CreateTaskBody } from "./api";
 
 interface FormValues {
@@ -10,8 +10,6 @@ interface FormValues {
 }
 
 export default function Command() {
-  const { pop } = useNavigation();
-
   async function handleSubmit(values: FormValues) {
     if (!values.text.trim()) {
       await showToast({ style: Toast.Style.Failure, title: "Title is required" });
@@ -39,7 +37,7 @@ export default function Command() {
       await showToast({ style: Toast.Style.Animated, title: "Creating task…" });
       await createTask(body);
       await showToast({ style: Toast.Style.Success, title: "Task created!" });
-      pop();
+      await launchCommand({ name: "view-tasks", type: LaunchType.UserInitiated });
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,

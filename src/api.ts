@@ -15,9 +15,15 @@ export interface HabiticaTask {
   date: string | null;
   completed: boolean;
   checklist: { id: string; text: string; completed: boolean }[];
+  tags: string[];
   createdAt: string;
   updatedAt: string;
   value: number;
+}
+
+export interface HabiticaTag {
+  id: string;
+  name: string;
 }
 
 export interface CreateTaskBody {
@@ -83,6 +89,10 @@ async function habiticaFetch<T>(path: string, options: RequestInit = {}): Promis
 export async function getTasks(type?: string): Promise<HabiticaTask[]> {
   const query = type ? `?type=${type}` : "";
   return habiticaFetch<HabiticaTask[]>(`/api/v3/tasks/user${query}`);
+}
+
+export async function getTags(): Promise<HabiticaTag[]> {
+  return habiticaFetch<HabiticaTag[]>("/api/v3/tags");
 }
 
 export async function createTask(body: CreateTaskBody): Promise<HabiticaTask> {

@@ -11,15 +11,8 @@ import {
   useNavigation,
 } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getTasks, scoreTask, deleteTask, HabiticaTask } from "./api";
+import { getTasks, getTags, scoreTask, deleteTask, HabiticaTask, HabiticaTag } from "./api";
 import EditTaskForm from "./edit-task";
-
-const TYPE_LABELS: Record<string, string> = {
-  todo: "To-Do",
-  habit: "Habit",
-  daily: "Daily",
-  reward: "Reward",
-};
 
 const PRIORITY_LABELS: Record<number, string> = {
   0.1: "Trivial",
@@ -29,24 +22,23 @@ const PRIORITY_LABELS: Record<number, string> = {
 };
 
 function taskIcon(task: HabiticaTask): { source: Icon; tintColor?: Color } {
-  if (task.type === "reward") return { source: Icon.Star, tintColor: Color.Yellow };
-  if (task.type === "habit") return { source: Icon.ArrowUpCircle, tintColor: Color.Blue };
   if (task.completed) return { source: Icon.CheckCircle, tintColor: Color.Green };
   return { source: Icon.Circle };
 }
 
 export default function Command() {
   const [tasks, setTasks] = useState<HabiticaTask[]>([]);
+  const [tags, setTags] = useState<HabiticaTag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState("all");
   const { push } = useNavigation();
 
-  const fetchTasks = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const filter = typeFilter === "all" ? undefined : typeFilter;
-      const data = await getTasks(filter);
-      setTasks(data);
+      const [taskData, tagData] = await Promise.all([getTasks("todos"), getTags()]);
+      setTasks(taskData);
+      setTags(tagData);
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -56,11 +48,13 @@ export default function Command() {
     } finally {
       setIsLoading(false);
     }
-  }, [typeFilter]);
+  }, []);
 
   useEffect(() => {
-    fetchTasks();
-  }, [fetchTasks]);
+    fetchData();
+  }, [fetchData]);
+
+  const filteredTasks = tagFilter === "all" ? tasks : tasks.filter((t) => t.tags.includes(tagFilter));
 
   async function handleScore(task: HabiticaTask) {
     const direction = task.completed ? "down" : "up";
@@ -71,7 +65,7 @@ export default function Command() {
         style: Toast.Style.Success,
         title: direction === "up" ? "Task completed!" : "Task un-completed!",
       });
-      await fetchTasks();
+      await fetchData();
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -94,7 +88,7 @@ export default function Command() {
       await showToast({ style: Toast.Style.Animated, title: "Deleting…" });
       await deleteTask(task.id);
       await showToast({ style: Toast.Style.Success, title: "Task deleted!" });
-      await fetchTasks();
+      await fetchData();
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -104,25 +98,27 @@ export default function Command() {
     }
   }
 
+  // Build a tag name lookup for accessories
+  const tagNameMap = new Map(tags.map((t) => [t.id, t.name]));
+
   return (
     <List
       isLoading={isLoading}
-      navigationTitle="Habitica Tasks"
-      searchBarPlaceholder="Search tasks…"
+      navigationTitle="Habitica To-Dos"
+      searchBarPlaceholder="Search to-dos…"
       searchBarAccessory={
-        <List.Dropdown tooltip="Filter by type" onChange={setTypeFilter} value={typeFilter}>
-          <List.Dropdown.Item title="All" value="all" />
-          <List.Dropdown.Item title="To-Dos" value="todos" />
-          <List.Dropdown.Item title="Habits" value="habits" />
-          <List.Dropdown.Item title="Dailies" value="dailys" />
-          <List.Dropdown.Item title="Rewards" value="rewards" />
+        <List.Dropdown tooltip="Filter by tag" onChange={setTagFilter} value={tagFilter}>
+          <List.Dropdown.Item title="All Tags" value="all" />
+          {tags.map((tag) => (
+            <List.Dropdown.Item key={tag.id} title={tag.name} value={tag.id} />
+          ))}
         </List.Dropdown>
       }
     >
-      {tasks.length === 0 && !isLoading ? (
-        <List.EmptyView title="No tasks found" description="Create a new task to get started!" />
+      {filteredTasks.length === 0 && !isLoading ? (
+        <List.EmptyView title="No to-dos found" description="Create a new to-do to get started!" />
       ) : (
-        tasks.map((task) => {
+        filteredTasks.map((task) => {
           const icon = taskIcon(task);
           const accessories: List.Item.Accessory[] = [];
 
@@ -132,30 +128,34 @@ export default function Command() {
           if (task.date) {
             accessories.push({ date: new Date(task.date), tooltip: "Due date" });
           }
+          // Show tag names
+          const taskTagNames = task.tags
+            .map((tid) => tagNameMap.get(tid))
+            .filter(Boolean) as string[];
+          if (taskTagNames.length > 0) {
+            accessories.push({ tag: { value: taskTagNames.join(", "), color: Color.Blue } });
+          }
 
           return (
             <List.Item
               key={task.id}
               icon={icon}
               title={task.text}
-              subtitle={TYPE_LABELS[task.type] || task.type}
               accessories={accessories}
               actions={
                 <ActionPanel>
                   <ActionPanel.Section title="Task Actions">
-                    {(task.type === "todo" || task.type === "daily" || task.type === "habit") && (
-                      <Action
-                        title={task.completed ? "Uncheck Task" : "Check Task"}
-                        icon={task.completed ? Icon.Circle : Icon.CheckCircle}
-                        onAction={() => handleScore(task)}
-                      />
-                    )}
+                    <Action
+                      title={task.completed ? "Uncheck Task" : "Check Task"}
+                      icon={task.completed ? Icon.Circle : Icon.CheckCircle}
+                      onAction={() => handleScore(task)}
+                    />
                     <Action
                       title="Edit Task"
                       icon={Icon.Pencil}
                       shortcut={{ modifiers: ["cmd"], key: "e" }}
                       onAction={() =>
-                        push(<EditTaskForm task={task} onUpdated={fetchTasks} />)
+                        push(<EditTaskForm task={task} onUpdated={fetchData} />)
                       }
                     />
                     <Action
@@ -171,7 +171,7 @@ export default function Command() {
                       title="Refresh"
                       icon={Icon.ArrowClockwise}
                       shortcut={{ modifiers: ["cmd"], key: "r" }}
-                      onAction={fetchTasks}
+                      onAction={fetchData}
                     />
                     <Action.OpenInBrowser
                       title="Open Habitica"
