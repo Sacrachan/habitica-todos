@@ -68,10 +68,16 @@ function getHeaders(): Record<string, string> {
   };
 }
 
-async function habiticaFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function habiticaFetch<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
-    headers: { ...getHeaders(), ...(options.headers as Record<string, string>) },
+    headers: {
+      ...getHeaders(),
+      ...(options.headers as Record<string, string>),
+    },
   } as Parameters<typeof fetch>[1]);
 
   const json = (await res.json()) as HabiticaResponse<T>;
@@ -103,14 +109,20 @@ export async function createTask(body: CreateTaskBody): Promise<HabiticaTask> {
   });
 }
 
-export async function updateTask(taskId: string, body: UpdateTaskBody): Promise<HabiticaTask> {
+export async function updateTask(
+  taskId: string,
+  body: UpdateTaskBody,
+): Promise<HabiticaTask> {
   return habiticaFetch<HabiticaTask>(`/api/v3/tasks/${taskId}`, {
     method: "PUT",
     body: JSON.stringify(body),
   });
 }
 
-export async function scoreTask(taskId: string, direction: "up" | "down"): Promise<unknown> {
+export async function scoreTask(
+  taskId: string,
+  direction: "up" | "down",
+): Promise<unknown> {
   return habiticaFetch(`/api/v3/tasks/${taskId}/score/${direction}`, {
     method: "POST",
   });
