@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "habitica",
+  "name": "Habitica ToDos",
   "title": "Habitica",
-  "description": "View and create ToDo's for Habitica",
+  "description": "Inofficial extension to view and create ToDo's for Habitica",
   "icon": "extension-icon.png",
   "license": "MIT",
   "preferences": [
