@@ -83,6 +83,26 @@ export interface HabiticaUser {
   };
 }
 
+export interface HabiticaContent {
+  gear: {
+    flat: Record<
+      string,
+      {
+        text: string;
+        notes: string;
+        value: number;
+        type: string;
+        klass?: string;
+        tier?: number;
+        str?: number;
+        int?: number;
+        per?: number;
+        con?: number;
+      }
+    >;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // HTTP helper
 // ---------------------------------------------------------------------------
@@ -174,6 +194,34 @@ export async function acceptQuest(): Promise<unknown> {
 
 export async function abortQuest(): Promise<unknown> {
   return habiticaFetch("/api/v3/groups/party/quests/abort", {
+    method: "POST",
+  });
+}
+
+export async function getContent(): Promise<HabiticaContent> {
+  return habiticaFetch<HabiticaContent>("/api/v3/content");
+}
+
+export async function buyGear(key: string): Promise<unknown> {
+  return habiticaFetch(`/api/v3/user/buy-gear/${key}`, {
+    method: "POST",
+  });
+}
+
+export async function buyHealthPotion(): Promise<unknown> {
+  return habiticaFetch("/api/v3/user/buy-health-potion", {
+    method: "POST",
+  });
+}
+
+export async function buyQuest(key: string): Promise<unknown> {
+  return habiticaFetch(`/api/v3/user/purchase/quests/${key}`, {
+    method: "POST",
+  });
+}
+
+export async function buyArmoire(): Promise<unknown> {
+  return habiticaFetch("/api/v3/user/buy-armoire", {
     method: "POST",
   });
 }
