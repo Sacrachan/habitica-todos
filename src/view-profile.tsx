@@ -69,13 +69,7 @@ export default function Command() {
   }
 
   const markdown = `
-# Level ${stats.lvl}
-
-**Health:** ${stats.hp.toFixed(1)} / 50  
-**Mana:** ${stats.mp.toFixed(1)}  
-**Experience:** ${stats.exp.toFixed(1)} / ${stats.toNextLevel}  
-**Gold:** ${stats.gp.toFixed(2)}  
-
+## Level ${stats?.lvl || 0}
 ---
 
 ${questMarkdown}
@@ -87,11 +81,27 @@ ${questMarkdown}
       markdown={markdown}
       metadata={
         <Detail.Metadata>
-          <Detail.Metadata.Label title="Level" text={String(stats.lvl)} />
-          <Detail.Metadata.Label title="Health" text={stats.hp.toFixed(1)} />
-          <Detail.Metadata.Label title="Mana" text={stats.mp.toFixed(1)} />
-          <Detail.Metadata.Label title="Experience" text={stats.exp.toFixed(1)} />
-          <Detail.Metadata.Label title="Gold" text={stats.gp.toFixed(2)} />
+          <Detail.Metadata.Label title="Level" text={String(stats?.lvl || 0)} icon={Icon.Crown} />
+          <Detail.Metadata.Label
+            title="Health"
+            text={(stats?.hp || 0).toFixed(1)}
+            icon={{ source: Icon.Heart, tintColor: Color.Red }}
+          />
+          <Detail.Metadata.Label
+            title="Mana"
+            text={(stats?.mp || 0).toFixed(1)}
+            icon={{ source: Icon.Star, tintColor: Color.Blue }}
+          />
+          <Detail.Metadata.Label
+            title="Experience"
+            text={(stats?.exp || 0).toFixed(1)}
+            icon={{ source: Icon.ChevronUp, tintColor: Color.Yellow }}
+          />
+          <Detail.Metadata.Label
+            title="Gold"
+            text={(stats?.gp || 0).toFixed(2)}
+            icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
+          />
           {quest && quest.key && (
             <Detail.Metadata.TagList title="Quest Status">
               <Detail.Metadata.TagList.Item

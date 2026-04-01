@@ -54,6 +54,9 @@ interface HabiticaResponse<T> {
 
 export interface HabiticaUser {
   id: string;
+  profile: {
+    imageUrl?: string;
+  };
   stats: {
     hp: number;
     mp: number;
@@ -154,7 +157,7 @@ export async function deleteTask(taskId: string): Promise<unknown> {
 }
 
 export async function getUser(): Promise<HabiticaUser> {
-  return habiticaFetch<HabiticaUser>("/api/v3/user?userFields=stats,party,items");
+  return habiticaFetch<HabiticaUser>("/api/v3/user?userFields=stats,party,items,profile");
 }
 
 export async function forceCompleteQuest(): Promise<unknown> {
