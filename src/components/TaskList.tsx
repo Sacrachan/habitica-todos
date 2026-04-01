@@ -11,7 +11,8 @@ import {
   useNavigation,
 } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getTasks, getTags, scoreTask, deleteTask, HabiticaTask, HabiticaTag } from "../api";
+import { getTasks, getTags, scoreTask, deleteTask } from "../api";
+import { HabiticaTask, HabiticaTag } from "../types";
 import EditTaskForm from "../edit-task";
 
 const PRIORITY_LABELS: Record<number, string> = {
@@ -35,7 +36,7 @@ function isTaskExpired(task: HabiticaTask): boolean {
   return dueDate.getTime() < today.getTime();
 }
 
-function formatTaskDate(date: string | null): string | undefined {
+function formatTaskDate(date: string | null | undefined): string | undefined {
   if (!date) return undefined;
   const taskDate = new Date(date);
   const now = new Date();

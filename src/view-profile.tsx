@@ -1,6 +1,8 @@
 import { ActionPanel, Action, Icon, Detail, showToast, Toast, Color } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getUser, forceCompleteQuest, acceptQuest, abortQuest, HabiticaUser, getAvatarSvg } from "./api";
+import { getUser, forceCompleteQuest, acceptQuest, abortQuest } from "./api";
+import { getAvatarSvg } from "./avatar";
+import { HabiticaUser } from "./types";
 
 export default function Command() {
   const [user, setUser] = useState<HabiticaUser | null>(null);

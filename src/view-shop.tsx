@@ -1,6 +1,7 @@
 import { ActionPanel, Action, Icon, List, showToast, Toast, Color } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getTasks, getUser, buyHealthPotion, scoreTask, buyArmoire, HabiticaUser } from "./api";
+import { getTasks, getUser, buyHealthPotion, scoreTask, buyArmoire } from "./api";
+import { HabiticaUser } from "./types";
 
 interface ShopItem {
   id: string;
@@ -115,13 +116,12 @@ export default function Command() {
               icon={item.icon || Icon.Cart}
               detail={
                 <List.Item.Detail
-                  markdown={`# ${item.text}\n\n${item.notes || ""}\n\n${
-                    item.id === "health_potion"
+                  markdown={`# ${item.text}\n\n${item.notes || ""}\n\n${item.id === "health_potion"
                       ? "![Potion](https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_health_potion.png)"
                       : item.id === "enchanted_armoire"
                         ? "![Armoire](https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_armoire.png)"
                         : ""
-                  }`}
+                    }`}
                   metadata={
                     <List.Item.Detail.Metadata>
                       <List.Item.Detail.Metadata.Label

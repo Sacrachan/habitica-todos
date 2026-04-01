@@ -1,6 +1,7 @@
 import { ActionPanel, Action, Icon, Grid, showToast, Toast } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getUser, HabiticaUser } from "./api";
+import { getUser } from "./api";
+import { HabiticaUser } from "./types";
 
 export default function Command() {
   const [user, setUser] = useState<HabiticaUser | null>(null);

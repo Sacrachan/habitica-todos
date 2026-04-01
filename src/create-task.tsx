@@ -1,6 +1,7 @@
 import { Form, ActionPanel, Action, showToast, Toast, launchCommand, LaunchType } from "@raycast/api";
 import { useEffect, useState } from "react";
-import { createTask, getTags, CreateTaskBody, HabiticaTag } from "./api";
+import { createTask, getTags } from "./api";
+import { HabiticaTag, CreateTaskBody } from "./types";
 
 interface FormValues {
   text: string;
