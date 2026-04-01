@@ -4,6 +4,7 @@ import { createTask, getTags, CreateTaskBody, HabiticaTag } from "./api";
 
 interface FormValues {
   text: string;
+  type: string;
   notes: string;
   priority: string;
   date: Date | null;
@@ -38,7 +39,7 @@ export default function Command() {
 
     const body: CreateTaskBody = {
       text: values.text.trim(),
-      type: "todo",
+      type: values.type || "todo",
     };
 
     if (values.notes?.trim()) {
@@ -84,6 +85,13 @@ export default function Command() {
       }
     >
       <Form.TextField id="text" title="Title" placeholder="What do you need to do?" autoFocus />
+
+      <Form.Dropdown id="type" title="Type" defaultValue="todo">
+        <Form.Dropdown.Item value="todo" title="To-Do" />
+        <Form.Dropdown.Item value="habit" title="Habit" />
+        <Form.Dropdown.Item value="daily" title="Daily" />
+      </Form.Dropdown>
+
       <Form.TextArea id="notes" title="Notes" placeholder="Additional details (optional)" />
 
       <Form.Separator />

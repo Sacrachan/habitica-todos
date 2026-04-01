@@ -18,6 +18,11 @@ export interface HabiticaTask {
   createdAt: string;
   updatedAt: string;
   value: number;
+  up?: boolean;
+  down?: boolean;
+  counterUp?: number;
+  counterDown?: number;
+  streak?: number;
 }
 
 export interface HabiticaTag {
@@ -45,6 +50,34 @@ interface HabiticaResponse<T> {
   success: boolean;
   data: T;
   message?: string;
+}
+
+export interface HabiticaUser {
+  id: string;
+  stats: {
+    hp: number;
+    mp: number;
+    exp: number;
+    toNextLevel: number;
+    lvl: number;
+    gp: number;
+  };
+  party: {
+    quest: {
+      key: string;
+      active: boolean;
+      progress?: {
+        up: number;
+        down: number;
+        collect?: Record<string, number>;
+      };
+    };
+  };
+  items: {
+    eggs: Record<string, number>;
+    hatchingPotions: Record<string, number>;
+    food: Record<string, number>;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -117,5 +150,27 @@ export async function scoreTask(taskId: string, direction: "up" | "down"): Promi
 export async function deleteTask(taskId: string): Promise<unknown> {
   return habiticaFetch(`/api/v3/tasks/${taskId}`, {
     method: "DELETE",
+  });
+}
+
+export async function getUser(): Promise<HabiticaUser> {
+  return habiticaFetch<HabiticaUser>("/api/v3/user?userFields=stats,party,items");
+}
+
+export async function forceCompleteQuest(): Promise<unknown> {
+  return habiticaFetch("/api/v3/groups/party/quests/force-complete", {
+    method: "POST",
+  });
+}
+
+export async function acceptQuest(): Promise<unknown> {
+  return habiticaFetch("/api/v3/groups/party/quests/accept", {
+    method: "POST",
+  });
+}
+
+export async function abortQuest(): Promise<unknown> {
+  return habiticaFetch("/api/v3/groups/party/quests/abort", {
+    method: "POST",
   });
 }
