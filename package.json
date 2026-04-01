@@ -63,6 +63,13 @@
       "description": "View your Habitica eggs, potions, and food",
       "mode": "view",
       "subtitle": "Habitica"
+    },
+    {
+      "name": "view-shop",
+      "title": "View Shop",
+      "description": "View and purchase custom rewards and in-game items",
+      "mode": "view",
+      "subtitle": "Habitica"
     }
   ],
   "dependencies": {

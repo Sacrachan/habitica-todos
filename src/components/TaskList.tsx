@@ -22,7 +22,7 @@ const PRIORITY_LABELS: Record<number, string> = {
 };
 
 interface TaskListProps {
-  type: "todos" | "dailys" | "habits";
+  type: "todos" | "dailys" | "habits" | "rewards";
   navigationTitle: string;
 }
 
@@ -97,6 +97,9 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     if (task.type === "habit") {
       actionName = direction === "up" ? "Scoring +" : "Scoring -";
       successName = direction === "up" ? "Scored +" : "Scored -";
+    } else if (task.type === "reward") {
+      actionName = "Purchasing";
+      successName = "Reward purchased!";
     } else {
       if (task.completed) {
         actionName = "Un-completing";
@@ -245,6 +248,8 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                           />
                         )}
                       </>
+                    ) : task.type === "reward" ? (
+                      <Action title="Purchase Reward" icon={Icon.Cart} onAction={() => handleScore(task)} />
                     ) : (
                       <Action
                         title={task.completed ? "Uncheck Task" : "Check Task"}

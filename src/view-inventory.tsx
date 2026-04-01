@@ -1,4 +1,4 @@
-import { ActionPanel, Action, Icon, List, showToast, Toast } from "@raycast/api";
+import { ActionPanel, Action, Icon, Grid, showToast, Toast } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
 import { getUser, HabiticaUser } from "./api";
 
@@ -27,7 +27,7 @@ export default function Command() {
   }, [fetchData]);
 
   if (!user && isLoading) {
-    return <List isLoading={true} />;
+    return <Grid isLoading={true} />;
   }
 
   const items = user?.items;
@@ -44,14 +44,14 @@ export default function Command() {
     .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Search inventory…">
-      <List.Section title={`Eggs (${eggs.length})`}>
+    <Grid isLoading={isLoading} searchBarPlaceholder="Search inventory…" itemSize={Grid.ItemSize.Medium}>
+      <Grid.Section title={`Eggs (${eggs.length})`}>
         {eggs.map(([key, count]) => (
-          <List.Item
+          <Grid.Item
             key={`egg-${key}`}
             title={key}
-            icon={Icon.Tag}
-            accessories={[{ text: String(count) }]}
+            subtitle={`Count: ${count}`}
+            content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_${key}.png`}
             actions={
               <ActionPanel>
                 <ActionPanel.Section>
@@ -71,15 +71,15 @@ export default function Command() {
             }
           />
         ))}
-      </List.Section>
+      </Grid.Section>
 
-      <List.Section title={`Hatching Potions (${potions.length})`}>
+      <Grid.Section title={`Hatching Potions (${potions.length})`}>
         {potions.map(([key, count]) => (
-          <List.Item
+          <Grid.Item
             key={`potion-${key}`}
             title={key}
-            icon={Icon.Mask}
-            accessories={[{ text: String(count) }]}
+            subtitle={`Count: ${count}`}
+            content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_${key}.png`}
             actions={
               <ActionPanel>
                 <ActionPanel.Section>
@@ -99,15 +99,15 @@ export default function Command() {
             }
           />
         ))}
-      </List.Section>
+      </Grid.Section>
 
-      <List.Section title={`Food (${food.length})`}>
+      <Grid.Section title={`Food (${food.length})`}>
         {food.map(([key, count]) => (
-          <List.Item
+          <Grid.Item
             key={`food-${key}`}
             title={key}
-            icon={Icon.Carrot}
-            accessories={[{ text: String(count) }]}
+            subtitle={`Count: ${count}`}
+            content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_${key}.png`}
             actions={
               <ActionPanel>
                 <ActionPanel.Section>
@@ -127,7 +127,7 @@ export default function Command() {
             }
           />
         ))}
-      </List.Section>
-    </List>
+      </Grid.Section>
+    </Grid>
   );
 }
