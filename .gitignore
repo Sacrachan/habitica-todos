@@ -18,6 +18,6 @@ bun.lock
 
 .env
 
-test-**.js
+test/
 out.json
 user.json

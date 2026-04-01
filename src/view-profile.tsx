@@ -1,9 +1,10 @@
 import { ActionPanel, Action, Icon, Detail, showToast, Toast, Color } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getUser, forceCompleteQuest, acceptQuest, abortQuest, HabiticaUser } from "./api";
+import { getUser, forceCompleteQuest, acceptQuest, abortQuest, HabiticaUser, getAvatarSvg } from "./api";
 
 export default function Command() {
   const [user, setUser] = useState<HabiticaUser | null>(null);
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
@@ -11,6 +12,10 @@ export default function Command() {
     try {
       const data = await getUser();
       setUser(data);
+      if (data) {
+        const uri = await getAvatarSvg(data);
+        setAvatarUri(uri);
+      }
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -69,6 +74,8 @@ export default function Command() {
   }
 
   const markdown = `
+${avatarUri ? `![Avatar](${avatarUri})` : ""}
+
 ## Level ${stats?.lvl || 0}
 ---
 
