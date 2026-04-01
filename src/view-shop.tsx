@@ -1,6 +1,6 @@
 import { ActionPanel, Action, Icon, List, showToast, Toast, Color } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getTasks, getUser, buyHealthPotion, scoreTask, buyArmoire, HabiticaTask, HabiticaUser } from "./api";
+import { getTasks, getUser, buyHealthPotion, scoreTask, buyArmoire, HabiticaUser } from "./api";
 
 interface ShopItem {
   id: string;
@@ -103,7 +103,7 @@ export default function Command() {
   }
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Search shop…" navigationTitle="Habitica Shop">
+    <List isLoading={isLoading} searchBarPlaceholder="Search shop…" navigationTitle="Habitica Shop" isShowingDetail>
       <List.Section title="Market" subtitle={user ? `${user.stats.gp.toFixed(2)} Gold` : undefined}>
         {items
           .filter((i) => i.type === "market")
@@ -113,7 +113,27 @@ export default function Command() {
               title={item.text}
               subtitle={`${item.value} Gold`}
               icon={item.icon || Icon.Cart}
-              accessories={[{ text: item.notes }]}
+              detail={
+                <List.Item.Detail
+                  markdown={`# ${item.text}\n\n${item.notes || ""}\n\n${
+                    item.id === "health_potion"
+                      ? "![Potion](https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_health_potion.png)"
+                      : item.id === "enchanted_armoire"
+                        ? "![Armoire](https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_armoire.png)"
+                        : ""
+                  }`}
+                  metadata={
+                    <List.Item.Detail.Metadata>
+                      <List.Item.Detail.Metadata.Label
+                        title="Price"
+                        text={`${item.value} Gold`}
+                        icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
+                      />
+                      <List.Item.Detail.Metadata.Label title="Type" text="Market" />
+                    </List.Item.Detail.Metadata>
+                  }
+                />
+              }
               actions={
                 <ActionPanel>
                   <Action title="Buy Item" icon={Icon.Cart} onAction={() => handleBuy(item)} />
@@ -132,6 +152,21 @@ export default function Command() {
               title={item.text}
               subtitle={`${item.value} Gold`}
               icon={Icon.Stars}
+              detail={
+                <List.Item.Detail
+                  markdown={`# ${item.text}\n\n${item.notes || "*No description*"}`}
+                  metadata={
+                    <List.Item.Detail.Metadata>
+                      <List.Item.Detail.Metadata.Label
+                        title="Price"
+                        text={`${item.value} Gold`}
+                        icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
+                      />
+                      <List.Item.Detail.Metadata.Label title="Type" text="Custom Reward" />
+                    </List.Item.Detail.Metadata>
+                  }
+                />
+              }
               actions={
                 <ActionPanel>
                   <Action title="Buy Reward" icon={Icon.Cart} onAction={() => handleBuy(item)} />
