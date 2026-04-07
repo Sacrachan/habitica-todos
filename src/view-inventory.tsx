@@ -2,8 +2,7 @@ import { ActionPanel, Action, Icon, Grid, showToast, Toast } from "@raycast/api"
 import { useEffect, useState, useCallback } from "react";
 import { getUser } from "./api";
 import { HabiticaUser } from "./types";
-
-const ASSET_BASE_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/";
+import { ASSET_BASE_URL } from "./constants";
 
 type InventoryEntry = [key: string, count: number];
 
@@ -14,95 +13,42 @@ function buildInventoryEntries(record: Record<string, number> | undefined): Inve
 }
 
 export default function Command() {
-  const [user, setUser] = useState<HabiticaUser | null>(null);
+  const [user,      setUser]      = useState<HabiticaUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [category, setCategory] = useState("all");
+  const [category,  setCategory]  = useState("all");
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getUser();
-      setUser(data);
+      setUser(await getUser());
     } catch (error) {
-      await showToast({
-        style: Toast.Style.Failure,
-        title: "Failed to load inventory",
-        message: String(error),
-      });
+      await showToast({ style: Toast.Style.Failure, title: "Failed to load inventory", message: String(error) });
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  if (!user && isLoading) {
-    return <Grid isLoading={true} />;
-  }
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const items = user?.items;
 
-  const eggs = buildInventoryEntries(items?.eggs);
-  const potions = buildInventoryEntries(items?.hatchingPotions);
-  const food = buildInventoryEntries(items?.food);
-  const special = buildInventoryEntries(items?.special);
-  const quests = buildInventoryEntries(items?.quests);
-
-  const inventoryActions = (
-    <ActionPanel>
-      <ActionPanel.Section>
-        <Action
-          title="Refresh"
-          icon={Icon.ArrowClockwise}
-          shortcut={{ modifiers: ["cmd"], key: "r" }}
-          onAction={fetchData}
-        />
-        <Action.OpenInBrowser
-          title="Open Habitica Inventory"
-          url="https://habitica.com/inventory/items"
-          shortcut={{ modifiers: ["cmd"], key: "o" }}
-        />
-      </ActionPanel.Section>
-    </ActionPanel>
-  );
-
   const categories: { key: string; label: string; entries: InventoryEntry[]; imageUrl: (k: string) => string }[] = [
-    {
-      key: "eggs",
-      label: "Eggs",
-      entries: eggs,
-      imageUrl: (k) => `${ASSET_BASE_URL}Pet_Egg_${k}.png`,
-    },
-    {
-      key: "potions",
-      label: "Hatching Potions",
-      entries: potions,
-      imageUrl: (k) => `${ASSET_BASE_URL}Pet_HatchingPotion_${k}.png`,
-    },
-    {
-      key: "food",
-      label: "Food",
-      entries: food,
-      imageUrl: (k) => `${ASSET_BASE_URL}Pet_Food_${k}.png`,
-    },
-    {
-      key: "special",
-      label: "Special",
-      entries: special,
-      imageUrl: (k) => `${ASSET_BASE_URL}shop_${k}.png`,
-    },
-    {
-      key: "quests",
-      label: "Quests",
-      entries: quests,
-      imageUrl: (k) => `${ASSET_BASE_URL}inventory_quest_scroll_${k}.png`,
-    },
+    { key: "eggs",    label: "Eggs",             entries: buildInventoryEntries(items?.eggs),            imageUrl: (k) => `${ASSET_BASE_URL}Pet_Egg_${k}.png` },
+    { key: "potions", label: "Hatching Potions", entries: buildInventoryEntries(items?.hatchingPotions), imageUrl: (k) => `${ASSET_BASE_URL}Pet_HatchingPotion_${k}.png` },
+    { key: "food",    label: "Food",             entries: buildInventoryEntries(items?.food),            imageUrl: (k) => `${ASSET_BASE_URL}Pet_Food_${k}.png` },
+    { key: "special", label: "Special",          entries: buildInventoryEntries(items?.special),         imageUrl: (k) => `${ASSET_BASE_URL}shop_${k}.png` },
+    { key: "quests",  label: "Quests",           entries: buildInventoryEntries(items?.quests),          imageUrl: (k) => `${ASSET_BASE_URL}inventory_quest_scroll_${k}.png` },
   ];
 
   const visibleCategories = category === "all" ? categories : categories.filter((c) => c.key === category);
-  const isCurrentCategoryEmpty = visibleCategories.every((c) => c.entries.length === 0);
+  const isEmpty = visibleCategories.every((c) => c.entries.length === 0);
+
+  const inventoryActions = (
+    <ActionPanel>
+      <Action title="Refresh" icon={Icon.ArrowClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={fetchData} />
+      <Action.OpenInBrowser title="Open Habitica Inventory" url="https://habitica.com/inventory/items" shortcut={{ modifiers: ["cmd"], key: "o" }} />
+    </ActionPanel>
+  );
 
   return (
     <Grid
@@ -111,16 +57,16 @@ export default function Command() {
       columns={8}
       searchBarAccessory={
         <Grid.Dropdown tooltip="Filter Category" onChange={setCategory} value={category}>
-          <Grid.Dropdown.Item title="All Items" value="all" />
-          <Grid.Dropdown.Item title="Eggs" value="eggs" />
-          <Grid.Dropdown.Item title="Hatching Potions" value="potions" />
-          <Grid.Dropdown.Item title="Pet Food and Saddles" value="food" />
-          <Grid.Dropdown.Item title="Special" value="special" />
-          <Grid.Dropdown.Item title="Quests" value="quests" />
+          <Grid.Dropdown.Item title="All Items"            value="all"     />
+          <Grid.Dropdown.Item title="Eggs"                 value="eggs"    />
+          <Grid.Dropdown.Item title="Hatching Potions"     value="potions" />
+          <Grid.Dropdown.Item title="Pet Food and Saddles" value="food"    />
+          <Grid.Dropdown.Item title="Special"              value="special" />
+          <Grid.Dropdown.Item title="Quests"               value="quests"  />
         </Grid.Dropdown>
       }
     >
-      {isCurrentCategoryEmpty && !isLoading ? (
+      {isEmpty && !isLoading ? (
         <Grid.EmptyView title="No items in this category" description="Go on some adventures to collect more!" />
       ) : (
         visibleCategories
@@ -128,13 +74,7 @@ export default function Command() {
           .map((c) => (
             <Grid.Section key={c.key} title={`${c.label} (${c.entries.length})`}>
               {c.entries.map(([key, count]) => (
-                <Grid.Item
-                  key={`${c.key}-${key}`}
-                  title={key}
-                  subtitle={`×${count}`}
-                  content={c.imageUrl(key)}
-                  actions={inventoryActions}
-                />
+                <Grid.Item key={`${c.key}-${key}`} title={key} subtitle={`×${count}`} content={c.imageUrl(key)} actions={inventoryActions} />
               ))}
             </Grid.Section>
           ))

@@ -25,7 +25,7 @@ const USER_TTL_MS  = 30_000;
 
 interface CacheEntry<T> {
   data: T;
-  expiresAt: number; // 0 = never expires (session-lifetime)
+  expiresAt: number; // 0 = session-lifetime (never expires)
 }
 
 const cache: {
@@ -40,49 +40,32 @@ function isFresh<T>(entry: CacheEntry<T> | null): entry is CacheEntry<T> {
   return entry.expiresAt === 0 || Date.now() < entry.expiresAt;
 }
 
-export function invalidateTasksCache(): void  { cache.tasks.clear(); }
-export function invalidateUserCache():  void  { cache.user = null; }
-export function invalidateAllCache():   void  {
-  cache.tasks.clear();
-  cache.tags  = null;
-  cache.user  = null;
-  // content is static game data — intentionally not cleared
-}
+export function invalidateTasksCache(): void { cache.tasks.clear(); }
+export function invalidateUserCache():  void { cache.user = null; }
 
 // ---------------------------------------------------------------------------
 // Core fetch helper
 // ---------------------------------------------------------------------------
 
-interface RequestOptions {
-  method?:  string;
-  headers?: Record<string, string>;
-  body?:    string;
-}
-
-async function habiticaFetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+async function habiticaFetch<T>(endpoint: string, options: { method?: string; body?: string } = {}): Promise<T> {
   const { apiUserId, apiToken } = getPreferenceValues<Preferences>();
 
-  const headers: Record<string, string> = {
-    ...options.headers,
-    "x-api-user": apiUserId,
-    "x-api-key":  apiToken,
-    "x-client":   `${apiUserId}-habitica-todos`,
-    "Content-Type": "application/json",
-  };
-
-  const response = await fetch(`${HABITICA_API_URL}${endpoint}`, { ...options, headers });
+  const response = await fetch(`${HABITICA_API_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      "x-api-user":   apiUserId,
+      "x-api-key":    apiToken,
+      "x-client":     `${apiUserId}-habitica-todos`,
+      "Content-Type": "application/json",
+    },
+  });
 
   if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Habitica API error: ${response.status} ${response.statusText} - ${errorBody}`);
+    throw new Error(`Habitica API error: ${response.status} ${response.statusText} - ${await response.text()}`);
   }
 
   const json = (await response.json()) as { success: boolean; data: T; message?: string };
-
-  if (!json.success) {
-    throw new Error(json.message || `Habitica API returned success: false for ${endpoint}`);
-  }
-
+  if (!json.success) throw new Error(json.message ?? `Habitica API returned success: false for ${endpoint}`);
   return json.data;
 }
 
@@ -94,9 +77,7 @@ export async function getTasks(type?: string): Promise<HabiticaTask[]> {
   const key = type ?? "__all__";
   const cached = cache.tasks.get(key);
   if (isFresh(cached)) return cached.data;
-
-  const query = type ? `?type=${type}` : "";
-  const data  = await habiticaFetch<HabiticaTask[]>(`/api/v3/tasks/user${query}`);
+  const data = await habiticaFetch<HabiticaTask[]>(`/api/v3/tasks/user${type ? `?type=${type}` : ""}`);
   cache.tasks.set(key, { data, expiresAt: Date.now() + TASKS_TTL_MS });
   return data;
 }
@@ -117,14 +98,10 @@ export async function scoreTask(taskId: string, direction: "up" | "down"): Promi
 export async function updateTask(taskId: string, body: UpdateTaskBody): Promise<HabiticaTask> {
   const result = await habiticaFetch<HabiticaTask>(`/api/v3/tasks/${taskId}`, {
     method: "PUT",
-    body:   JSON.stringify(body),
+    body: JSON.stringify(body),
   });
   invalidateTasksCache();
   return result;
-}
-
-export async function toggleTask(taskId: string): Promise<void> {
-  await scoreTask(taskId, "up");
 }
 
 export async function createTask(body: CreateTaskBody): Promise<void> {
@@ -148,9 +125,7 @@ export async function getUser(): Promise<HabiticaUser> {
 
 export async function getContent(): Promise<HabiticaContent> {
   if (isFresh(cache.content)) return cache.content.data;
-  // Request only the gear subset — the full content payload includes pets, eggs,
-  // food, spells, quests, etc. which the shop never needs. This reduces the
-  // response size by ~95% and is the single biggest speed win for the shop.
+  // Only fetch gear — cuts the response by ~95% vs the full content endpoint.
   const data = await habiticaFetch<HabiticaContent>("/api/v3/content?language=en&fields=gear");
   cache.content = { data, expiresAt: 0 };
   return data;

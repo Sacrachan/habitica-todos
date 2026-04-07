@@ -16,3 +16,6 @@ export const PRIORITY_OPTIONS: { value: string; title: string }[] = [
 
 /** Sentinel value for the "no tag filter" dropdown option. */
 export const TAG_FILTER_ALL = "all";
+
+/** Shared S3 asset base URL used by avatar and inventory. */
+export const ASSET_BASE_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/";

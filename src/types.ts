@@ -2,11 +2,14 @@
 // Shared sub-types
 // ---------------------------------------------------------------------------
 
+export type GearSlot = "weapon" | "armor" | "head" | "shield" | "headAccessory" | "eyewear" | "back" | "body";
+export type TaskAttribute = "str" | "int" | "per" | "con";
+
 export interface GearItem {
   text: string;
   notes: string;
   value: number;
-  type: string;
+  type: GearSlot;
   /** The class this gear belongs to: "warrior", "healer", "wizard", "rogue", "special", "armoire", etc. */
   klass?: string;
   tier?: number;
@@ -15,13 +18,6 @@ export interface GearItem {
   per?: number;
   con?: number;
   twoHanded?: boolean;
-}
-
-export interface QuestItem {
-  text: string;
-  notes: string;
-  value: number;
-  type: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -40,12 +36,9 @@ export interface HabiticaUser {
     toNextLevel: number;
     lvl: number;
     gp: number;
-    /** Defaults to 50 if the server omits it. */
     maxHealth?: number;
-    /** The user's chosen class: "warrior", "healer", "wizard", "rogue". */
     class?: string;
   };
-  /** May be absent for users not in a party. */
   party?: {
     quest?: {
       key: string;
@@ -65,7 +58,6 @@ export interface HabiticaUser {
     special: Record<string, number>;
     gear: {
       equipped: Record<string, string>;
-      /** All gear the user owns (key -> true). */
       owned: Record<string, boolean>;
     };
     pets: Record<string, number>;
@@ -91,7 +83,7 @@ export interface HabiticaTask {
   type: "habit" | "daily" | "todo" | "reward";
   value: number;
   priority: number;
-  attribute: string;
+  attribute: TaskAttribute;
   date?: string | null;
   tags: string[];
   counterUp?: number;
@@ -122,10 +114,9 @@ export interface UpdateTaskBody {
   date?: string;
 }
 
+/** Only the gear subset is fetched from /api/v3/content (fields=gear). */
 export interface HabiticaContent {
   gear: {
     flat: Record<string, GearItem>;
   };
-  questKeys: string[];
-  quests: Record<string, QuestItem>;
 }
