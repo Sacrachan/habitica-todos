@@ -84,13 +84,13 @@ export default function Command() {
         </Grid.Dropdown>
       }
     >
-      {(category === "all" || category === "eggs") && (
+      {(category === "all" || category === "eggs") && eggs.length > 0 && (
         <Grid.Section title={`Eggs (${eggs.length})`}>
           {eggs.map(([key, count]) => (
             <Grid.Item
               key={`egg-${key}`}
               title={key}
-              subtitle={`Count: ${count}`}
+              subtitle={`×${count}`}
               content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_${key}.png`}
               actions={inventoryActions}
             />
@@ -98,13 +98,13 @@ export default function Command() {
         </Grid.Section>
       )}
 
-      {(category === "all" || category === "potions") && (
+      {(category === "all" || category === "potions") && potions.length > 0 && (
         <Grid.Section title={`Hatching Potions (${potions.length})`}>
           {potions.map(([key, count]) => (
             <Grid.Item
               key={`potion-${key}`}
               title={key}
-              subtitle={`Count: ${count}`}
+              subtitle={`×${count}`}
               content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_${key}.png`}
               actions={inventoryActions}
             />
@@ -112,13 +112,13 @@ export default function Command() {
         </Grid.Section>
       )}
 
-      {(category === "all" || category === "food") && (
+      {(category === "all" || category === "food") && food.length > 0 && (
         <Grid.Section title={`Food (${food.length})`}>
           {food.map(([key, count]) => (
             <Grid.Item
               key={`food-${key}`}
               title={key}
-              subtitle={`Count: ${count}`}
+              subtitle={`×${count}`}
               content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_${key}.png`}
               actions={inventoryActions}
             />
@@ -126,13 +126,13 @@ export default function Command() {
         </Grid.Section>
       )}
 
-      {(category === "all" || category === "special") && (
+      {(category === "all" || category === "special") && special.length > 0 && (
         <Grid.Section title={`Special (${special.length})`}>
           {special.map(([key, count]) => (
             <Grid.Item
               key={`special-${key}`}
               title={key}
-              subtitle={`Count: ${count}`}
+              subtitle={`×${count}`}
               content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_${key}.png`}
               actions={inventoryActions}
             />
@@ -140,19 +140,29 @@ export default function Command() {
         </Grid.Section>
       )}
 
-      {(category === "all" || category === "quests") && (
+      {(category === "all" || category === "quests") && quests.length > 0 && (
         <Grid.Section title={`Quests (${quests.length})`}>
           {quests.map(([key, count]) => (
             <Grid.Item
               key={`quest-${key}`}
               title={key}
-              subtitle={`Count: ${count}`}
+              subtitle={`×${count}`}
               content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_${key}.png`}
               actions={inventoryActions}
             />
           ))}
         </Grid.Section>
       )}
+
+      {/* Show empty state when a specific category is selected but has no items */}
+      {category !== "all" &&
+        ((category === "eggs" && eggs.length === 0) ||
+          (category === "potions" && potions.length === 0) ||
+          (category === "food" && food.length === 0) ||
+          (category === "special" && special.length === 0) ||
+          (category === "quests" && quests.length === 0)) && (
+          <Grid.EmptyView title="No items in this category" description="Go on some adventures to collect more!" />
+        )}
     </Grid>
   );
 }

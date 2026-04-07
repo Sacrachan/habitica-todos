@@ -1,21 +1,25 @@
 import { ActionPanel, Action, Icon, Detail, showToast, Toast, Color } from "@raycast/api";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { getUser, forceCompleteQuest, acceptQuest, abortQuest, getContent } from "./api";
 import { getAvatarSvg } from "./avatar";
 import { HabiticaUser, HabiticaContent } from "./types";
 
 export default function Command() {
   const [user, setUser] = useState<HabiticaUser | null>(null);
-  const [content, setContent] = useState<HabiticaContent | null>(null);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // Cache content so it is only fetched once per command lifetime
+  const contentRef = useRef<HabiticaContent | null>(null);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [data, contentData] = await Promise.all([getUser(), getContent()]);
+      // Only fetch content on first load
+      if (!contentRef.current) {
+        contentRef.current = await getContent();
+      }
+      const data = await getUser();
       setUser(data);
-      setContent(contentData);
       if (data) {
         const uri = await getAvatarSvg(data);
         setAvatarUri(uri);
@@ -35,32 +39,15 @@ export default function Command() {
     fetchData();
   }, [fetchData]);
 
-  async function handleQuestAction(action: "accept" | "abort" | "force-complete") {
-    try {
-      await showToast({ style: Toast.Style.Animated, title: "Processing…" });
-      if (action === "accept") await acceptQuest();
-      if (action === "abort") await abortQuest();
-      if (action === "force-complete") await forceCompleteQuest();
-      await showToast({ style: Toast.Style.Success, title: "Quest updated!" });
-      await fetchData();
-    } catch (error) {
-      await showToast({
-        style: Toast.Style.Failure,
-        title: `Failed to ${action} quest`,
-        message: String(error),
-      });
-    }
-  }
-
   if (!user) {
     return <Detail isLoading={isLoading} markdown="Loading your profile…" />;
   }
 
+  const content = contentRef.current;
   const { stats, party } = user;
   const quest = party?.quest;
-  const questName = quest?.key && content?.quests?.[quest.key]?.text
-    ? content.quests[quest.key].text
-    : quest?.key || "Unknown Quest";
+  const questName =
+    quest?.key && content?.quests?.[quest.key]?.text ? content.quests[quest.key].text : quest?.key || "Unknown Quest";
 
   let questMarkdown = "### No Active Quest\n\nYou are not currently on a quest.";
 
@@ -80,6 +67,8 @@ export default function Command() {
     }
   }
 
+  const maxHealth = stats?.maxHealth ?? 50;
+
   const markdown = `
 ${avatarUri ? `![Avatar](${avatarUri})` : ""}
 
@@ -98,7 +87,7 @@ ${questMarkdown}
           <Detail.Metadata.Label title="Level" text={String(stats?.lvl || 0)} icon={Icon.Crown} />
           <Detail.Metadata.Label
             title="Health"
-            text={(stats?.hp || 0).toFixed(1)}
+            text={`${(stats?.hp || 0).toFixed(1)} / ${maxHealth}`}
             icon={{ source: Icon.Heart, tintColor: Color.Red }}
           />
           <Detail.Metadata.Label
@@ -108,7 +97,7 @@ ${questMarkdown}
           />
           <Detail.Metadata.Label
             title="Experience"
-            text={(stats?.exp || 0).toFixed(1)}
+            text={`${(stats?.exp || 0).toFixed(1)} / ${stats?.toNextLevel || "?"}`}
             icon={{ source: Icon.ChevronUp, tintColor: Color.Yellow }}
           />
           <Detail.Metadata.Label
@@ -167,4 +156,21 @@ ${questMarkdown}
       }
     />
   );
+
+  async function handleQuestAction(action: "accept" | "abort" | "force-complete") {
+    try {
+      await showToast({ style: Toast.Style.Animated, title: "Processing…" });
+      if (action === "accept") await acceptQuest();
+      if (action === "abort") await abortQuest();
+      if (action === "force-complete") await forceCompleteQuest();
+      await showToast({ style: Toast.Style.Success, title: "Quest updated!" });
+      await fetchData();
+    } catch (error) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: `Failed to ${action} quest`,
+        message: String(error),
+      });
+    }
+  }
 }

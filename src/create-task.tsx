@@ -13,6 +13,12 @@ interface FormValues {
   tags: string[];
 }
 
+const TYPE_TO_COMMAND: Record<string, string> = {
+  todo: "view-tasks",
+  habit: "view-habits",
+  daily: "view-dailies",
+};
+
 export default function Command() {
   const [tags, setTags] = useState<HabiticaTag[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(true);
@@ -22,8 +28,12 @@ export default function Command() {
       try {
         const data = await getTags();
         setTags(data);
-      } catch {
-        // silently fail – tags are optional
+      } catch (error) {
+        await showToast({
+          style: Toast.Style.Failure,
+          title: "Failed to load tags",
+          message: String(error),
+        });
       } finally {
         setIsLoadingTags(false);
       }
@@ -39,9 +49,11 @@ export default function Command() {
       return;
     }
 
+    const taskType = values.type || "todo";
+
     const body: CreateTaskBody = {
       text: values.text.trim(),
-      type: values.type || "todo",
+      type: taskType,
     };
 
     if (values.notes?.trim()) {
@@ -65,8 +77,9 @@ export default function Command() {
       await showToast({ style: Toast.Style.Animated, title: "Creating task…" });
       await createTask(body);
       await showToast({ style: Toast.Style.Success, title: "Task created!" });
+      const targetCommand = TYPE_TO_COMMAND[taskType] ?? "view-tasks";
       await launchCommand({
-        name: "view-tasks",
+        name: targetCommand,
         type: LaunchType.UserInitiated,
       });
     } catch (error) {

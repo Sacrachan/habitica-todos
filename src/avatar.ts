@@ -1,11 +1,33 @@
 import { HabiticaUser } from "./types";
 
+/** Encode an ArrayBuffer to base64 without relying on Node's Buffer global.
+ *  Works in Node (via Uint8Array) and in any browser-like runtime. */
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
+/** Encode a UTF-8 string to base64 without relying on Node's Buffer global. */
+function stringToBase64(str: string): string {
+  // TextEncoder is available in both Node >=16 and all modern browser runtimes.
+  const bytes = new TextEncoder().encode(str);
+  let binary = "";
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary);
+}
+
 async function fetchImageAsBase64(url: string): Promise<string> {
   try {
     const res = await fetch(url);
     if (!res.ok) return "";
     const buffer = await res.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString("base64");
+    const base64 = arrayBufferToBase64(buffer);
     return `data:image/png;base64,${base64}`;
   } catch {
     return "";
@@ -76,7 +98,7 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   // 12. Pet
   if (items?.currentPet) layerUrls.push(`${baseUrl}Pet-${items.currentPet}.png`);
 
-  const layers = await Promise.all(layerUrls.map(async (url) => await fetchImageAsBase64(url)));
+  const layers = await Promise.all(layerUrls.map((url) => fetchImageAsBase64(url)));
   const filteredLayers = layers.filter((l) => l !== "");
 
   const offsetY = items?.currentMount ? 0 : 12;
@@ -86,5 +108,5 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   ${filteredLayers.map((dataUri) => `<image xlink:href="${dataUri}" x="0" y="${offsetY}" width="140" height="140" />`).join("\n  ")}
 </svg>`;
 
-  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+  return `data:image/svg+xml;base64,${stringToBase64(svg)}`;
 }

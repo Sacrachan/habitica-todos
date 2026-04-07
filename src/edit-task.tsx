@@ -1,5 +1,6 @@
 import { Form, ActionPanel, Action, showToast, Toast, useNavigation } from "@raycast/api";
-import { HabiticaTask, updateTask, UpdateTaskBody } from "./api";
+import { HabiticaTask, UpdateTaskBody } from "./types";
+import { updateTask } from "./api";
 import { toHabiticaDate } from "./date-utils";
 
 interface EditTaskFormProps {
@@ -38,12 +39,15 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
       body.priority = parseFloat(values.priority);
     }
 
-    const dueDate = toHabiticaDate(values.date);
-    if (dueDate) {
-      body.date = dueDate;
-    } else if (task.date) {
-      // Explicitly clear the date if the user removed it
-      body.date = "";
+    // Only touch the date field for task types that show the DatePicker
+    if (task.type === "todo") {
+      const dueDate = toHabiticaDate(values.date);
+      if (dueDate) {
+        body.date = dueDate;
+      } else if (task.date) {
+        // Explicitly clear the date if the user removed it
+        body.date = "";
+      }
     }
 
     try {
