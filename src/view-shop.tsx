@@ -15,8 +15,9 @@ interface ShopItem {
   notes?: string;
   value: number;
   type: ShopItemType;
+  /** Raycast Icon used when no remote image is available. */
   icon?: Icon;
-  /** Remote image URL for the item icon (gear only). */
+  /** Remote image URL for the item icon. Only set when the URL is known to be accessible. */
   imageUrl?: string;
   /** Gear asset key used to build the image URL (e.g. "weapon_warrior_1"). */
   gearKey?: string;
@@ -46,46 +47,38 @@ const GEAR_TYPE_LABEL: Record<string, string> = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Build the S3 shop image URL for a gear item.
- * Both `shop_{key}.png` and `{key}.png` exist; the shop_ variant is
- * the larger, white-background version used in the web app Rewards tab.
- */
 function gearImageUrl(key: string): string {
   return `${GEAR_ASSET_BASE}/shop_${key}.png`;
 }
 
 /**
  * Build the list of purchasable gear items for the given user.
- *
- * Mirrors exactly what the web Rewards tab shows:
- *   - Only the user's own class gear (klass === user's class)
- *   - Items the user doesn't already own
- *   - Sorted by value (ascending) within each gear type
+ * Mirrors the web Rewards tab: user's class only, not yet owned, sorted by price.
  */
 function buildGearItems(user: HabiticaUser, content: HabiticaContent): ShopItem[] {
   const userClass = user.stats.class ?? "warrior";
   const ownedKeys = user.items.gear.owned ?? {};
 
   return Object.entries(content.gear.flat)
-    .filter(([key, gear]) =>
-      gear.klass === userClass &&
-      gear.value > 0 &&
-      !ownedKeys[key]
-    )
+    .filter(([key, gear]) => gear.klass === userClass && gear.value > 0 && !ownedKeys[key])
     .sort((a, b) => a[1].value - b[1].value)
-    .map(([key, gear]) => {
-      const imgUrl = gearImageUrl(key);
-      return {
-        id: `gear:${key}`,
-        text: gear.text,
-        notes: gear.notes,
-        value: gear.value,
-        type: "gear" as const,
-        gearKey: key,
-        imageUrl: imgUrl,
-      };
-    });
+    .map(([key, gear]) => ({
+      id: `gear:${key}`,
+      text: gear.text,
+      notes: gear.notes,
+      value: gear.value,
+      type: "gear" as const,
+      gearKey: key,
+      imageUrl: gearImageUrl(key),
+    }));
+}
+
+/** Resolve the icon for a list row: prefer a remote image, fall back to a Raycast Icon. */
+function resolveIcon(item: ShopItem, fallback: Icon): Icon | { source: string; mask: Image.Mask } {
+  if (item.imageUrl) {
+    return { source: item.imageUrl, mask: Image.Mask.RoundedRectangle };
+  }
+  return item.icon ?? fallback;
 }
 
 // ---------------------------------------------------------------------------
@@ -105,6 +98,7 @@ export default function Command() {
 
       const shopItems: ShopItem[] = [
         // Market items
+        // Note: shop_health_potion.png returns 403 on S3, so no imageUrl — Icon.Heart is used instead.
         ...(userData.stats.hp < (userData.stats.maxHealth ?? 50)
           ? [{
               id: "health_potion",
@@ -113,7 +107,6 @@ export default function Command() {
               value: 25,
               type: "market" as const,
               icon: Icon.Heart,
-              imageUrl: `${GEAR_ASSET_BASE}/shop_health_potion.png`,
             }]
           : []),
         ...(userData.stats.lvl >= 10
@@ -166,7 +159,7 @@ export default function Command() {
     }
 
     try {
-      await showToast({ style: Toast.Style.Animated, title: "Purchasing\u2026" });
+      await showToast({ style: Toast.Style.Animated, title: "Purchasing…" });
 
       if (item.id === "health_potion") {
         await buyHealthPotion();
@@ -222,7 +215,7 @@ export default function Command() {
   }
 
   return (
-    <List isLoading={isLoading} searchBarPlaceholder="Search rewards\u2026" navigationTitle="Habitica Rewards" isShowingDetail>
+    <List isLoading={isLoading} searchBarPlaceholder="Search rewards…" navigationTitle="Habitica Rewards" isShowingDetail>
 
       {/* Market */}
       <List.Section title="Market" subtitle={goldLabel}>
@@ -233,11 +226,7 @@ export default function Command() {
               key={item.id}
               title={item.text}
               subtitle={`${item.value} GP`}
-              icon={
-                item.imageUrl
-                  ? { source: item.imageUrl, mask: Image.Mask.RoundedRectangle }
-                  : (item.icon ?? Icon.Cart)
-              }
+              icon={resolveIcon(item, Icon.Cart)}
               detail={renderDetail(item, "Market")}
               actions={
                 <ActionPanel>
@@ -261,11 +250,7 @@ export default function Command() {
                 key={item.id}
                 title={item.text}
                 subtitle={`${item.value} GP`}
-                icon={
-                  item.imageUrl
-                    ? { source: item.imageUrl, mask: Image.Mask.RoundedRectangle }
-                    : Icon.Hammer
-                }
+                icon={resolveIcon(item, Icon.Hammer)}
                 detail={renderDetail(item, label)}
                 actions={
                   <ActionPanel>
