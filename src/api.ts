@@ -16,6 +16,55 @@ interface Preferences {
 
 const HABITICA_API_URL = "https://habitica.com";
 
+// ---------------------------------------------------------------------------
+// In-memory cache
+// ---------------------------------------------------------------------------
+
+const TASKS_TTL_MS = 30_000; // 30 seconds
+const USER_TTL_MS = 30_000;
+
+interface CacheEntry<T> {
+  data: T;
+  expiresAt: number; // 0 = never expires (session-lifetime cache)
+}
+
+const cache: {
+  tasks: Map<string, CacheEntry<HabiticaTask[]>>;
+  tags: CacheEntry<HabiticaTag[]> | null;
+  user: CacheEntry<HabiticaUser> | null;
+  content: CacheEntry<HabiticaContent> | null;
+} = {
+  tasks: new Map(),
+  tags: null,
+  user: null,
+  content: null,
+};
+
+function isFresh<T>(entry: CacheEntry<T> | null): entry is CacheEntry<T> {
+  if (!entry) return false;
+  return entry.expiresAt === 0 || Date.now() < entry.expiresAt;
+}
+
+/** Call after any mutation to ensure the next read hits the network. */
+export function invalidateTasksCache(): void {
+  cache.tasks.clear();
+}
+
+export function invalidateUserCache(): void {
+  cache.user = null;
+}
+
+export function invalidateAllCache(): void {
+  cache.tasks.clear();
+  cache.tags = null;
+  cache.user = null;
+  // content is static game data — intentionally not cleared
+}
+
+// ---------------------------------------------------------------------------
+// Core fetch helper
+// ---------------------------------------------------------------------------
+
 interface RequestOptions {
   method?: string;
   headers?: Record<string, string>;
@@ -52,26 +101,45 @@ async function habiticaFetch<T>(endpoint: string, options: RequestOptions = {}):
   return json.data;
 }
 
+// ---------------------------------------------------------------------------
+// API functions (reads use cache; writes invalidate cache)
+// ---------------------------------------------------------------------------
+
 export async function getTasks(type?: string): Promise<HabiticaTask[]> {
+  const key = type ?? "__all__";
+  const cached = cache.tasks.get(key);
+  if (isFresh(cached)) return cached.data;
+
   const query = type ? `?type=${type}` : "";
-  return habiticaFetch<HabiticaTask[]>(`/api/v3/tasks/user${query}`);
+  const data = await habiticaFetch<HabiticaTask[]>(`/api/v3/tasks/user${query}`);
+  cache.tasks.set(key, { data, expiresAt: Date.now() + TASKS_TTL_MS });
+  return data;
 }
 
 export async function getTags(): Promise<HabiticaTag[]> {
-  return habiticaFetch<HabiticaTag[]>("/api/v3/tags");
+  if (isFresh(cache.tags)) return cache.tags.data;
+
+  const data = await habiticaFetch<HabiticaTag[]>("/api/v3/tags");
+  // Tags are session-lifetime cached (expiresAt = 0 means never expires)
+  cache.tags = { data, expiresAt: 0 };
+  return data;
 }
 
 export async function scoreTask(taskId: string, direction: "up" | "down"): Promise<void> {
   await habiticaFetch(`/api/v3/tasks/${taskId}/score/${direction}`, {
     method: "POST",
   });
+  invalidateTasksCache();
+  invalidateUserCache();
 }
 
 export async function updateTask(taskId: string, body: UpdateTaskBody): Promise<HabiticaTask> {
-  return habiticaFetch<HabiticaTask>(`/api/v3/tasks/${taskId}`, {
+  const result = await habiticaFetch<HabiticaTask>(`/api/v3/tasks/${taskId}`, {
     method: "PUT",
     body: JSON.stringify(body),
   });
+  invalidateTasksCache();
+  return result;
 }
 
 export async function toggleTask(taskId: string): Promise<void> {
@@ -83,60 +151,85 @@ export async function createTask(body: CreateTaskBody): Promise<void> {
     method: "POST",
     body: JSON.stringify(body),
   });
+  invalidateTasksCache();
 }
 
 export async function deleteTask(taskId: string): Promise<void> {
   await habiticaFetch(`/api/v3/tasks/${taskId}`, {
     method: "DELETE",
   });
+  invalidateTasksCache();
 }
 
 export async function getUser(): Promise<HabiticaUser> {
-  return habiticaFetch<HabiticaUser>("/api/v3/user?userFields=stats,party,items,profile,preferences");
+  if (isFresh(cache.user)) return cache.user.data;
+
+  const data = await habiticaFetch<HabiticaUser>("/api/v3/user?userFields=stats,party,items,profile,preferences");
+  cache.user = { data, expiresAt: Date.now() + USER_TTL_MS };
+  return data;
 }
 
 export async function forceCompleteQuest(): Promise<unknown> {
-  return habiticaFetch("/api/v3/groups/party/quests/force-complete", {
+  const result = await habiticaFetch("/api/v3/groups/party/quests/force-complete", {
     method: "POST",
   });
+  invalidateUserCache();
+  return result;
 }
 
 export async function acceptQuest(): Promise<unknown> {
-  return habiticaFetch("/api/v3/groups/party/quests/accept", {
+  const result = await habiticaFetch("/api/v3/groups/party/quests/accept", {
     method: "POST",
   });
+  invalidateUserCache();
+  return result;
 }
 
 export async function abortQuest(): Promise<unknown> {
-  return habiticaFetch("/api/v3/groups/party/quests/abort", {
+  const result = await habiticaFetch("/api/v3/groups/party/quests/abort", {
     method: "POST",
   });
+  invalidateUserCache();
+  return result;
 }
 
 export async function getContent(): Promise<HabiticaContent> {
-  return habiticaFetch<HabiticaContent>("/api/v3/content");
+  if (isFresh(cache.content)) return cache.content.data;
+
+  const data = await habiticaFetch<HabiticaContent>("/api/v3/content");
+  // Content is static game data — session-lifetime cached
+  cache.content = { data, expiresAt: 0 };
+  return data;
 }
 
 export async function buyGear(key: string): Promise<unknown> {
-  return habiticaFetch(`/api/v3/user/buy-gear/${key}`, {
+  const result = await habiticaFetch(`/api/v3/user/buy-gear/${key}`, {
     method: "POST",
   });
+  invalidateUserCache();
+  return result;
 }
 
 export async function buyHealthPotion(): Promise<unknown> {
-  return habiticaFetch("/api/v3/user/buy-health-potion", {
+  const result = await habiticaFetch("/api/v3/user/buy-health-potion", {
     method: "POST",
   });
+  invalidateUserCache();
+  return result;
 }
 
 export async function buyQuest(key: string): Promise<unknown> {
-  return habiticaFetch(`/api/v3/user/purchase/quests/${key}`, {
+  const result = await habiticaFetch(`/api/v3/user/purchase/quests/${key}`, {
     method: "POST",
   });
+  invalidateUserCache();
+  return result;
 }
 
 export async function buyArmoire(): Promise<unknown> {
-  return habiticaFetch("/api/v3/user/buy-armoire", {
+  const result = await habiticaFetch("/api/v3/user/buy-armoire", {
     method: "POST",
   });
+  invalidateUserCache();
+  return result;
 }
