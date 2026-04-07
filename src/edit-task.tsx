@@ -1,5 +1,6 @@
 import { Form, ActionPanel, Action, showToast, Toast, useNavigation } from "@raycast/api";
 import { HabiticaTask, updateTask, UpdateTaskBody } from "./api";
+import { toHabiticaDate } from "./date-utils";
 
 interface EditTaskFormProps {
   task: HabiticaTask;
@@ -37,8 +38,9 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
       body.priority = parseFloat(values.priority);
     }
 
-    if (values.date) {
-      body.date = values.date.toISOString().split("T")[0];
+    const dueDate = toHabiticaDate(values.date);
+    if (dueDate) {
+      body.date = dueDate;
     } else if (task.date) {
       // Explicitly clear the date if the user removed it
       body.date = "";

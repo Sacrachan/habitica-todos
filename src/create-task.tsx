@@ -2,6 +2,7 @@ import { Form, ActionPanel, Action, showToast, Toast, launchCommand, LaunchType 
 import { useEffect, useState } from "react";
 import { createTask, getTags } from "./api";
 import { HabiticaTag, CreateTaskBody } from "./types";
+import { toHabiticaDate } from "./date-utils";
 
 interface FormValues {
   text: string;
@@ -51,8 +52,9 @@ export default function Command() {
       body.priority = parseFloat(values.priority);
     }
 
-    if (values.date) {
-      body.date = values.date.toISOString().split("T")[0];
+    const dueDate = toHabiticaDate(values.date);
+    if (dueDate) {
+      body.date = dueDate;
     }
 
     if (values.tags && values.tags.length > 0) {
