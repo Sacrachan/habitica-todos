@@ -8,6 +8,8 @@ export interface GearItem {
   value: number;
   type: string;
   klass?: string;
+  /** Class shorthand used in the asset URL (e.g. "warrior", "rogue"). */
+  specialClass?: string;
   tier?: number;
   str?: number;
   int?: number;
@@ -62,6 +64,8 @@ export interface HabiticaUser {
     special: Record<string, number>;
     gear: {
       equipped: Record<string, string>;
+      /** All gear the user owns (key → true). */
+      owned: Record<string, boolean>;
     };
     pets: Record<string, number>;
     mounts: Record<string, number>;
