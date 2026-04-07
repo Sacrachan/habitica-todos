@@ -13,14 +13,8 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { getTasks, getTags, scoreTask, deleteTask } from "../api";
 import { HabiticaTask, HabiticaTag } from "../types";
+import { PRIORITY_LABELS, TAG_FILTER_ALL } from "../constants";
 import EditTaskForm from "../edit-task";
-
-const PRIORITY_LABELS: Record<number, string> = {
-  0.1: "Trivial",
-  1: "Easy",
-  1.5: "Medium",
-  2: "Hard",
-};
 
 interface TaskListProps {
   type: "todos" | "dailys" | "habits" | "rewards";
@@ -66,7 +60,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
   const [tasks, setTasks] = useState<HabiticaTask[]>([]);
   const [tags, setTags] = useState<HabiticaTag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [tagFilter, setTagFilter] = useState("all");
+  const [tagFilter, setTagFilter] = useState(TAG_FILTER_ALL);
   const { push } = useNavigation();
 
   const fetchData = useCallback(async () => {
@@ -90,7 +84,8 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     fetchData();
   }, [fetchData]);
 
-  const filteredTasks = tagFilter === "all" ? tasks : tasks.filter((t) => t.tags.includes(tagFilter));
+  const filteredTasks =
+    tagFilter === TAG_FILTER_ALL ? tasks : tasks.filter((t) => t.tags.includes(tagFilter));
 
   async function handleScore(task: HabiticaTask, direction: "up" | "down" = "up") {
     let actionName = "Completing";
@@ -102,24 +97,16 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     } else if (task.type === "reward") {
       actionName = "Purchasing";
       successName = "Reward purchased!";
-    } else {
-      if (task.completed) {
-        actionName = "Un-completing";
-        successName = "Task un-completed!";
-        direction = "down";
-      }
+    } else if (task.completed) {
+      actionName = "Un-completing";
+      successName = "Task un-completed!";
+      direction = "down";
     }
 
     try {
-      await showToast({
-        style: Toast.Style.Animated,
-        title: `${actionName}…`,
-      });
+      await showToast({ style: Toast.Style.Animated, title: `${actionName}…` });
       await scoreTask(task.id, direction);
-      await showToast({
-        style: Toast.Style.Success,
-        title: successName,
-      });
+      await showToast({ style: Toast.Style.Success, title: successName });
       await fetchData();
     } catch (error) {
       await showToast({
@@ -163,7 +150,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
       searchBarPlaceholder="Search tasks…"
       searchBarAccessory={
         <List.Dropdown tooltip="Filter by tag" onChange={setTagFilter} value={tagFilter}>
-          <List.Dropdown.Item title="All Tags" value="all" />
+          <List.Dropdown.Item title="All Tags" value={TAG_FILTER_ALL} />
           {tags.map((tag) => (
             <List.Dropdown.Item key={tag.id} title={tag.name} value={tag.id} />
           ))}
@@ -177,14 +164,9 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
           const icon = taskIcon(task);
           const formattedDate = formatTaskDate(task.date);
           const taskTagNames = task.tags.map((tid) => tagNameMap.get(tid)).filter(Boolean) as string[];
-          const difficultyLabel = PRIORITY_LABELS[task.priority] || "Unknown";
+          const difficultyLabel = PRIORITY_LABELS[task.priority] ?? "Unknown";
 
-          const detailParts: string[] = [];
-          if (task.notes) {
-            detailParts.push(task.notes);
-          } else {
-            detailParts.push("*No description*");
-          }
+          const detailMarkdown = task.notes || "*No description*";
 
           return (
             <List.Item
@@ -194,15 +176,15 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
               accessories={formattedDate ? [{ text: formattedDate }] : undefined}
               detail={
                 <List.Item.Detail
-                  markdown={detailParts.join("\n\n")}
+                  markdown={detailMarkdown}
                   metadata={
                     <List.Item.Detail.Metadata>
                       <List.Item.Detail.Metadata.Label title="Difficulty" text={difficultyLabel} />
                       {task.type === "habit" && (
                         <>
                           <List.Item.Detail.Metadata.Separator />
-                          <List.Item.Detail.Metadata.Label title="Positives (+)" text={String(task.counterUp || 0)} />
-                          <List.Item.Detail.Metadata.Label title="Negatives (-)" text={String(task.counterDown || 0)} />
+                          <List.Item.Detail.Metadata.Label title="Positives (+)" text={String(task.counterUp ?? 0)} />
+                          <List.Item.Detail.Metadata.Label title="Negatives (-)" text={String(task.counterDown ?? 0)} />
                         </>
                       )}
                       {task.type === "daily" && task.streak !== undefined && (

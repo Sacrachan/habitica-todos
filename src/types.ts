@@ -1,3 +1,32 @@
+// ---------------------------------------------------------------------------
+// Shared sub-types
+// ---------------------------------------------------------------------------
+
+export interface GearItem {
+  text: string;
+  notes: string;
+  value: number;
+  type: string;
+  klass?: string;
+  tier?: number;
+  str?: number;
+  int?: number;
+  per?: number;
+  con?: number;
+  twoHanded?: boolean;
+}
+
+export interface QuestItem {
+  text: string;
+  notes: string;
+  value: number;
+  type: string;
+}
+
+// ---------------------------------------------------------------------------
+// Main types
+// ---------------------------------------------------------------------------
+
 export interface HabiticaUser {
   id: string;
   profile: {
@@ -10,15 +39,17 @@ export interface HabiticaUser {
     toNextLevel: number;
     lvl: number;
     gp: number;
-    maxHealth: number;
+    /** Defaults to 50 if the server omits it. */
+    maxHealth?: number;
   };
-  party: {
-    quest: {
+  /** May be absent for users not in a party. */
+  party?: {
+    quest?: {
       key: string;
       active: boolean;
       progress?: {
-        up: number;
-        down: number;
+        up?: number;
+        down?: number;
         collect?: Record<string, number>;
       };
     };
@@ -72,7 +103,7 @@ export interface HabiticaTag {
 
 export interface CreateTaskBody {
   text: string;
-  type: string;
+  type: "todo" | "habit" | "daily" | "reward";
   notes?: string;
   priority?: number;
   date?: string;
@@ -88,31 +119,8 @@ export interface UpdateTaskBody {
 
 export interface HabiticaContent {
   gear: {
-    flat: Record<
-      string,
-      {
-        text: string;
-        notes: string;
-        value: number;
-        type: string;
-        klass?: string;
-        tier?: number;
-        str?: number;
-        int?: number;
-        per?: number;
-        con?: number;
-        twoHanded?: boolean;
-      }
-    >;
+    flat: Record<string, GearItem>;
   };
   questKeys: string[];
-  quests: Record<
-    string,
-    {
-      text: string;
-      notes: string;
-      value: number;
-      type: string;
-    }
-  >;
+  quests: Record<string, QuestItem>;
 }

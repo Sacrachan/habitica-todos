@@ -2,6 +2,7 @@ import { Form, ActionPanel, Action, showToast, Toast, useNavigation } from "@ray
 import { HabiticaTask, UpdateTaskBody } from "./types";
 import { updateTask } from "./api";
 import { toHabiticaDate } from "./date-utils";
+import { PRIORITY_OPTIONS } from "./constants";
 
 interface EditTaskFormProps {
   task: HabiticaTask;
@@ -20,26 +21,16 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
 
   async function handleSubmit(values: FormValues) {
     if (!values.text.trim()) {
-      await showToast({
-        style: Toast.Style.Failure,
-        title: "Title is required",
-      });
+      await showToast({ style: Toast.Style.Failure, title: "Title is required" });
       return;
     }
 
-    const body: UpdateTaskBody = {
-      text: values.text.trim(),
-    };
+    const body: UpdateTaskBody = { text: values.text.trim() };
 
-    if (values.notes !== undefined) {
-      body.notes = values.notes.trim();
-    }
+    if (values.notes !== undefined) body.notes = values.notes.trim();
+    if (values.priority) body.priority = parseFloat(values.priority);
 
-    if (values.priority) {
-      body.priority = parseFloat(values.priority);
-    }
-
-    // Only touch the date field for task types that show the DatePicker
+    // Only apply date changes for task types that expose the DatePicker
     if (task.type === "todo") {
       const dueDate = toHabiticaDate(values.date);
       if (dueDate) {
@@ -76,15 +67,14 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
     >
       <Form.TextField id="text" title="Title" defaultValue={task.text} autoFocus />
 
-      <Form.TextArea id="notes" title="Notes" defaultValue={task.notes || ""} />
+      <Form.TextArea id="notes" title="Notes" defaultValue={task.notes ?? ""} />
 
       <Form.Separator />
 
       <Form.Dropdown id="priority" title="Difficulty" defaultValue={String(task.priority)}>
-        <Form.Dropdown.Item value="0.1" title="Trivial" />
-        <Form.Dropdown.Item value="1" title="Easy" />
-        <Form.Dropdown.Item value="1.5" title="Medium" />
-        <Form.Dropdown.Item value="2" title="Hard" />
+        {PRIORITY_OPTIONS.map((opt) => (
+          <Form.Dropdown.Item key={opt.value} value={opt.value} title={opt.title} />
+        ))}
       </Form.Dropdown>
 
       {task.type === "todo" && (

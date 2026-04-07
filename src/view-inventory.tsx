@@ -3,6 +3,16 @@ import { useEffect, useState, useCallback } from "react";
 import { getUser } from "./api";
 import { HabiticaUser } from "./types";
 
+const ASSET_BASE_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/";
+
+type InventoryEntry = [key: string, count: number];
+
+function buildInventoryEntries(record: Record<string, number> | undefined): InventoryEntry[] {
+  return Object.entries(record ?? {})
+    .filter(([, count]) => count > 0)
+    .sort(([a], [b]) => a.localeCompare(b)) as InventoryEntry[];
+}
+
 export default function Command() {
   const [user, setUser] = useState<HabiticaUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,21 +44,11 @@ export default function Command() {
 
   const items = user?.items;
 
-  const eggs = Object.entries(items?.eggs || {})
-    .filter(([, count]) => count > 0)
-    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
-  const potions = Object.entries(items?.hatchingPotions || {})
-    .filter(([, count]) => count > 0)
-    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
-  const food = Object.entries(items?.food || {})
-    .filter(([, count]) => count > 0)
-    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
-  const special = Object.entries(items?.special || {})
-    .filter(([, count]) => count > 0)
-    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
-  const quests = Object.entries(items?.quests || {})
-    .filter(([, count]) => count > 0)
-    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
+  const eggs = buildInventoryEntries(items?.eggs);
+  const potions = buildInventoryEntries(items?.hatchingPotions);
+  const food = buildInventoryEntries(items?.food);
+  const special = buildInventoryEntries(items?.special);
+  const quests = buildInventoryEntries(items?.quests);
 
   const inventoryActions = (
     <ActionPanel>
@@ -68,6 +68,42 @@ export default function Command() {
     </ActionPanel>
   );
 
+  const categories: { key: string; label: string; entries: InventoryEntry[]; imageUrl: (k: string) => string }[] = [
+    {
+      key: "eggs",
+      label: "Eggs",
+      entries: eggs,
+      imageUrl: (k) => `${ASSET_BASE_URL}Pet_Egg_${k}.png`,
+    },
+    {
+      key: "potions",
+      label: "Hatching Potions",
+      entries: potions,
+      imageUrl: (k) => `${ASSET_BASE_URL}Pet_HatchingPotion_${k}.png`,
+    },
+    {
+      key: "food",
+      label: "Food",
+      entries: food,
+      imageUrl: (k) => `${ASSET_BASE_URL}Pet_Food_${k}.png`,
+    },
+    {
+      key: "special",
+      label: "Special",
+      entries: special,
+      imageUrl: (k) => `${ASSET_BASE_URL}shop_${k}.png`,
+    },
+    {
+      key: "quests",
+      label: "Quests",
+      entries: quests,
+      imageUrl: (k) => `${ASSET_BASE_URL}inventory_quest_scroll_${k}.png`,
+    },
+  ];
+
+  const visibleCategories = category === "all" ? categories : categories.filter((c) => c.key === category);
+  const isCurrentCategoryEmpty = visibleCategories.every((c) => c.entries.length === 0);
+
   return (
     <Grid
       isLoading={isLoading}
@@ -84,85 +120,25 @@ export default function Command() {
         </Grid.Dropdown>
       }
     >
-      {(category === "all" || category === "eggs") && eggs.length > 0 && (
-        <Grid.Section title={`Eggs (${eggs.length})`}>
-          {eggs.map(([key, count]) => (
-            <Grid.Item
-              key={`egg-${key}`}
-              title={key}
-              subtitle={`×${count}`}
-              content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_${key}.png`}
-              actions={inventoryActions}
-            />
-          ))}
-        </Grid.Section>
+      {isCurrentCategoryEmpty && !isLoading ? (
+        <Grid.EmptyView title="No items in this category" description="Go on some adventures to collect more!" />
+      ) : (
+        visibleCategories
+          .filter((c) => c.entries.length > 0)
+          .map((c) => (
+            <Grid.Section key={c.key} title={`${c.label} (${c.entries.length})`}>
+              {c.entries.map(([key, count]) => (
+                <Grid.Item
+                  key={`${c.key}-${key}`}
+                  title={key}
+                  subtitle={`×${count}`}
+                  content={c.imageUrl(key)}
+                  actions={inventoryActions}
+                />
+              ))}
+            </Grid.Section>
+          ))
       )}
-
-      {(category === "all" || category === "potions") && potions.length > 0 && (
-        <Grid.Section title={`Hatching Potions (${potions.length})`}>
-          {potions.map(([key, count]) => (
-            <Grid.Item
-              key={`potion-${key}`}
-              title={key}
-              subtitle={`×${count}`}
-              content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_${key}.png`}
-              actions={inventoryActions}
-            />
-          ))}
-        </Grid.Section>
-      )}
-
-      {(category === "all" || category === "food") && food.length > 0 && (
-        <Grid.Section title={`Food (${food.length})`}>
-          {food.map(([key, count]) => (
-            <Grid.Item
-              key={`food-${key}`}
-              title={key}
-              subtitle={`×${count}`}
-              content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_${key}.png`}
-              actions={inventoryActions}
-            />
-          ))}
-        </Grid.Section>
-      )}
-
-      {(category === "all" || category === "special") && special.length > 0 && (
-        <Grid.Section title={`Special (${special.length})`}>
-          {special.map(([key, count]) => (
-            <Grid.Item
-              key={`special-${key}`}
-              title={key}
-              subtitle={`×${count}`}
-              content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_${key}.png`}
-              actions={inventoryActions}
-            />
-          ))}
-        </Grid.Section>
-      )}
-
-      {(category === "all" || category === "quests") && quests.length > 0 && (
-        <Grid.Section title={`Quests (${quests.length})`}>
-          {quests.map(([key, count]) => (
-            <Grid.Item
-              key={`quest-${key}`}
-              title={key}
-              subtitle={`×${count}`}
-              content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_${key}.png`}
-              actions={inventoryActions}
-            />
-          ))}
-        </Grid.Section>
-      )}
-
-      {/* Show empty state when a specific category is selected but has no items */}
-      {category !== "all" &&
-        ((category === "eggs" && eggs.length === 0) ||
-          (category === "potions" && potions.length === 0) ||
-          (category === "food" && food.length === 0) ||
-          (category === "special" && special.length === 0) ||
-          (category === "quests" && quests.length === 0)) && (
-          <Grid.EmptyView title="No items in this category" description="Go on some adventures to collect more!" />
-        )}
     </Grid>
   );
 }
