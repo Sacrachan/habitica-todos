@@ -1,19 +1,21 @@
 import { ActionPanel, Action, Icon, Detail, showToast, Toast, Color } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getUser, forceCompleteQuest, acceptQuest, abortQuest } from "./api";
+import { getUser, forceCompleteQuest, acceptQuest, abortQuest, getContent } from "./api";
 import { getAvatarSvg } from "./avatar";
-import { HabiticaUser } from "./types";
+import { HabiticaUser, HabiticaContent } from "./types";
 
 export default function Command() {
   const [user, setUser] = useState<HabiticaUser | null>(null);
+  const [content, setContent] = useState<HabiticaContent | null>(null);
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getUser();
+      const [data, contentData] = await Promise.all([getUser(), getContent()]);
       setUser(data);
+      setContent(contentData);
       if (data) {
         const uri = await getAvatarSvg(data);
         setAvatarUri(uri);
@@ -56,11 +58,14 @@ export default function Command() {
 
   const { stats, party } = user;
   const quest = party?.quest;
+  const questName = quest?.key && content?.quests?.[quest.key]?.text
+    ? content.quests[quest.key].text
+    : quest?.key || "Unknown Quest";
 
   let questMarkdown = "### No Active Quest\n\nYou are not currently on a quest.";
 
   if (quest && quest.key) {
-    questMarkdown = `### Active Quest: ${quest.key}\n`;
+    questMarkdown = `### Active Quest: ${questName}\n`;
     questMarkdown += `Status: ${quest.active ? "Active" : "Pending"}\n\n`;
     if (quest.progress) {
       if (quest.progress.up !== undefined) {

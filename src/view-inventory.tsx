@@ -34,7 +34,6 @@ export default function Command() {
 
   const items = user?.items;
 
-  // Filter items that have a count > 0
   const eggs = Object.entries(items?.eggs || {})
     .filter(([, count]) => count > 0)
     .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
@@ -44,6 +43,30 @@ export default function Command() {
   const food = Object.entries(items?.food || {})
     .filter(([, count]) => count > 0)
     .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
+  const special = Object.entries(items?.special || {})
+    .filter(([, count]) => count > 0)
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
+  const quests = Object.entries(items?.quests || {})
+    .filter(([, count]) => count > 0)
+    .sort(([keyA], [keyB]) => keyA.localeCompare(keyB));
+
+  const inventoryActions = (
+    <ActionPanel>
+      <ActionPanel.Section>
+        <Action
+          title="Refresh"
+          icon={Icon.ArrowClockwise}
+          shortcut={{ modifiers: ["cmd"], key: "r" }}
+          onAction={fetchData}
+        />
+        <Action.OpenInBrowser
+          title="Open Habitica Inventory"
+          url="https://habitica.com/inventory/items"
+          shortcut={{ modifiers: ["cmd"], key: "o" }}
+        />
+      </ActionPanel.Section>
+    </ActionPanel>
+  );
 
   return (
     <Grid
@@ -69,23 +92,7 @@ export default function Command() {
               title={key}
               subtitle={`Count: ${count}`}
               content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_${key}.png`}
-              actions={
-                <ActionPanel>
-                  <ActionPanel.Section>
-                    <Action
-                      title="Refresh"
-                      icon={Icon.ArrowClockwise}
-                      shortcut={{ modifiers: ["cmd"], key: "r" }}
-                      onAction={fetchData}
-                    />
-                    <Action.OpenInBrowser
-                      title="Open Habitica Inventory"
-                      url="https://habitica.com/inventory/items"
-                      shortcut={{ modifiers: ["cmd"], key: "o" }}
-                    />
-                  </ActionPanel.Section>
-                </ActionPanel>
-              }
+              actions={inventoryActions}
             />
           ))}
         </Grid.Section>
@@ -99,23 +106,7 @@ export default function Command() {
               title={key}
               subtitle={`Count: ${count}`}
               content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_${key}.png`}
-              actions={
-                <ActionPanel>
-                  <ActionPanel.Section>
-                    <Action
-                      title="Refresh"
-                      icon={Icon.ArrowClockwise}
-                      shortcut={{ modifiers: ["cmd"], key: "r" }}
-                      onAction={fetchData}
-                    />
-                    <Action.OpenInBrowser
-                      title="Open Habitica Inventory"
-                      url="https://habitica.com/inventory/items"
-                      shortcut={{ modifiers: ["cmd"], key: "o" }}
-                    />
-                  </ActionPanel.Section>
-                </ActionPanel>
-              }
+              actions={inventoryActions}
             />
           ))}
         </Grid.Section>
@@ -129,23 +120,35 @@ export default function Command() {
               title={key}
               subtitle={`Count: ${count}`}
               content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_${key}.png`}
-              actions={
-                <ActionPanel>
-                  <ActionPanel.Section>
-                    <Action
-                      title="Refresh"
-                      icon={Icon.ArrowClockwise}
-                      shortcut={{ modifiers: ["cmd"], key: "r" }}
-                      onAction={fetchData}
-                    />
-                    <Action.OpenInBrowser
-                      title="Open Habitica Inventory"
-                      url="https://habitica.com/inventory/items"
-                      shortcut={{ modifiers: ["cmd"], key: "o" }}
-                    />
-                  </ActionPanel.Section>
-                </ActionPanel>
-              }
+              actions={inventoryActions}
+            />
+          ))}
+        </Grid.Section>
+      )}
+
+      {(category === "all" || category === "special") && (
+        <Grid.Section title={`Special (${special.length})`}>
+          {special.map(([key, count]) => (
+            <Grid.Item
+              key={`special-${key}`}
+              title={key}
+              subtitle={`Count: ${count}`}
+              content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/shop_${key}.png`}
+              actions={inventoryActions}
+            />
+          ))}
+        </Grid.Section>
+      )}
+
+      {(category === "all" || category === "quests") && (
+        <Grid.Section title={`Quests (${quests.length})`}>
+          {quests.map(([key, count]) => (
+            <Grid.Item
+              key={`quest-${key}`}
+              title={key}
+              subtitle={`Count: ${count}`}
+              content={`https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_${key}.png`}
+              actions={inventoryActions}
             />
           ))}
         </Grid.Section>

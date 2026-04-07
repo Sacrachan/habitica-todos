@@ -39,6 +39,7 @@ function isTaskExpired(task: HabiticaTask): boolean {
 function formatTaskDate(date: string | null | undefined): string | undefined {
   if (!date) return undefined;
   const taskDate = new Date(date);
+  if (Number.isNaN(taskDate.getTime())) return undefined;
   const now = new Date();
   const isCurrentYear = taskDate.getFullYear() === now.getFullYear();
   return taskDate.toLocaleDateString("en-US", {
@@ -152,7 +153,6 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     }
   }
 
-  // Build a tag name lookup
   const tagNameMap = new Map(tags.map((t) => [t.id, t.name]));
 
   return (
@@ -211,8 +211,13 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                           <List.Item.Detail.Metadata.Label title="Streak" text={String(task.streak)} />
                         </>
                       )}
+                      {formattedDate && (
+                        <>
+                          <List.Item.Detail.Metadata.Separator />
+                          <List.Item.Detail.Metadata.Label title="Due Date" text={formattedDate} />
+                        </>
+                      )}
                       <List.Item.Detail.Metadata.Separator />
-                      {task.date && <List.Item.Detail.Metadata.Label title="Due Date" text={formattedDate} />}
                       <List.Item.Detail.Metadata.TagList title="Tags">
                         {taskTagNames.length > 0 ? (
                           taskTagNames.map((name) => (
@@ -237,16 +242,19 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                   <ActionPanel.Section title="Task Actions">
                     {task.type === "habit" ? (
                       <>
-                        {task.up && (
+                        {task.up !== false && (
                           <Action title="Score +" icon={Icon.Plus} onAction={() => handleScore(task, "up")} />
                         )}
-                        {task.down && (
+                        {task.down !== false && (
                           <Action
                             title="Score -"
                             icon={Icon.Minus}
                             shortcut={{ modifiers: ["cmd"], key: "d" }}
                             onAction={() => handleScore(task, "down")}
                           />
+                        )}
+                        {task.up === false && task.down === false && (
+                          <Action title="Score" icon={Icon.Plus} onAction={() => handleScore(task, "up")} />
                         )}
                       </>
                     ) : task.type === "reward" ? (

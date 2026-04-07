@@ -1,6 +1,13 @@
 import { getPreferenceValues } from "@raycast/api";
 import fetch from "node-fetch";
-import { HabiticaTask, HabiticaUser, HabiticaContent, HabiticaTag, CreateTaskBody } from "./types";
+import {
+  HabiticaTask,
+  HabiticaUser,
+  HabiticaContent,
+  HabiticaTag,
+  CreateTaskBody,
+  UpdateTaskBody,
+} from "./types";
 
 interface Preferences {
   apiUserId: string;
@@ -9,10 +16,16 @@ interface Preferences {
 
 const HABITICA_API_URL = "https://habitica.com";
 
-async function habiticaFetch<T>(endpoint: string, options: any = {}): Promise<T> {
+interface RequestOptions {
+  method?: string;
+  headers?: Record<string, string>;
+  body?: string;
+}
+
+async function habiticaFetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { apiUserId, apiToken } = getPreferenceValues<Preferences>();
 
-  const headers = {
+  const headers: Record<string, string> = {
     ...options.headers,
     "x-api-user": apiUserId,
     "x-api-key": apiToken,
@@ -30,22 +43,18 @@ async function habiticaFetch<T>(endpoint: string, options: any = {}): Promise<T>
     throw new Error(`Habitica API error: ${response.status} ${response.statusText} - ${errorBody}`);
   }
 
-  const json = (await response.json()) as any;
+  const json = (await response.json()) as { success: boolean; data: T; message?: string };
+
+  if (!json.success) {
+    throw new Error(json.message || `Habitica API returned success: false for ${endpoint}`);
+  }
+
   return json.data;
 }
 
 export async function getTasks(type?: string): Promise<HabiticaTask[]> {
-  const tasks = await habiticaFetch<HabiticaTask[]>("/api/v3/tasks/user");
-  if (type) {
-    return tasks.filter((t) => {
-      if (type === "todos") return t.type === "todo";
-      if (type === "dailys") return t.type === "daily";
-      if (type === "habits") return t.type === "habit";
-      if (type === "rewards") return t.type === "reward";
-      return t.type === type;
-    });
-  }
-  return tasks;
+  const query = type ? `?type=${type}` : "";
+  return habiticaFetch<HabiticaTask[]>(`/api/v3/tasks/user${query}`);
 }
 
 export async function getTags(): Promise<HabiticaTag[]> {
@@ -58,14 +67,15 @@ export async function scoreTask(taskId: string, direction: "up" | "down"): Promi
   });
 }
 
-export async function updateTask(taskId: string, direction: "up" | "down"): Promise<void> {
-  await scoreTask(taskId, direction);
+export async function updateTask(taskId: string, body: UpdateTaskBody): Promise<HabiticaTask> {
+  return habiticaFetch<HabiticaTask>(`/api/v3/tasks/${taskId}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+  });
 }
 
 export async function toggleTask(taskId: string): Promise<void> {
-  // Habitica doesn't have a simple toggle, you have to score it
-  // For Todos, scoring 'up' completes it
-  await updateTask(taskId, "up");
+  await scoreTask(taskId, "up");
 }
 
 export async function createTask(body: CreateTaskBody): Promise<void> {

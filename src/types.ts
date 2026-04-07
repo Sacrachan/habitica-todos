@@ -10,6 +10,7 @@ export interface HabiticaUser {
     toNextLevel: number;
     lvl: number;
     gp: number;
+    maxHealth: number;
   };
   party: {
     quest: {
@@ -26,6 +27,8 @@ export interface HabiticaUser {
     eggs: Record<string, number>;
     hatchingPotions: Record<string, number>;
     food: Record<string, number>;
+    quests: Record<string, number>;
+    special: Record<string, number>;
     gear: {
       equipped: Record<string, string>;
     };
@@ -74,6 +77,13 @@ export interface CreateTaskBody {
   priority?: number;
   date?: string;
   tags?: string[];
+}
+
+export interface UpdateTaskBody {
+  text?: string;
+  notes?: string;
+  priority?: number;
+  date?: string;
 }
 
 export interface HabiticaContent {

@@ -31,8 +31,9 @@ export default function Command() {
         type: "reward",
       }));
 
-      // Add Market Health Potion
-      if (userData.stats.hp < 50) {
+      // Add Market Health Potion when not at full health
+      const maxHealth = userData.stats.maxHealth ?? 50;
+      if (userData.stats.hp < maxHealth) {
         shopItems.unshift({
           id: "health_potion",
           text: "Health Potion",
