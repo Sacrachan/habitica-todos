@@ -7,9 +7,8 @@ export interface GearItem {
   notes: string;
   value: number;
   type: string;
+  /** The class this gear belongs to: "warrior", "healer", "wizard", "rogue", "special", "armoire", etc. */
   klass?: string;
-  /** Class shorthand used in the asset URL (e.g. "warrior", "rogue"). */
-  specialClass?: string;
   tier?: number;
   str?: number;
   int?: number;
@@ -43,6 +42,8 @@ export interface HabiticaUser {
     gp: number;
     /** Defaults to 50 if the server omits it. */
     maxHealth?: number;
+    /** The user's chosen class: "warrior", "healer", "wizard", "rogue". */
+    class?: string;
   };
   /** May be absent for users not in a party. */
   party?: {
@@ -64,7 +65,7 @@ export interface HabiticaUser {
     special: Record<string, number>;
     gear: {
       equipped: Record<string, string>;
-      /** All gear the user owns (key → true). */
+      /** All gear the user owns (key -> true). */
       owned: Record<string, boolean>;
     };
     pets: Record<string, number>;

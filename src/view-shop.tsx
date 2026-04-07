@@ -1,4 +1,4 @@
-import { ActionPanel, Action, Icon, List, showToast, Toast, Color } from "@raycast/api";
+import { ActionPanel, Action, Icon, List, showToast, Toast, Color, Image } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
 import { getTasks, getUser, getContent, buyHealthPotion, buyGear, scoreTask, buyArmoire } from "./api";
 import { HabiticaUser, HabiticaContent } from "./types";
@@ -16,14 +16,14 @@ interface ShopItem {
   value: number;
   type: ShopItemType;
   icon?: Icon;
+  /** Remote image URL for the item icon (gear only). */
+  imageUrl?: string;
   /** Gear asset key used to build the image URL (e.g. "weapon_warrior_1"). */
   gearKey?: string;
-  /** True if the user already owns this piece of gear. */
-  owned?: boolean;
 }
 
 // ---------------------------------------------------------------------------
-// Helpers
+// Constants
 // ---------------------------------------------------------------------------
 
 const GEAR_ASSET_BASE = "https://habitica-assets.s3.amazonaws.com/mobileApp/images";
@@ -42,41 +42,50 @@ const GEAR_TYPE_LABEL: Record<string, string> = {
   body: "Body Accessory",
 };
 
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
 /**
- * Build the gear image URL for an item detail panel.
- * Habitica uses keys like `shop_weapon_warrior_1.png` on S3.
+ * Build the S3 shop image URL for a gear item.
+ * Both `shop_{key}.png` and `{key}.png` exist; the shop_ variant is
+ * the larger, white-background version used in the web app Rewards tab.
  */
 function gearImageUrl(key: string): string {
   return `${GEAR_ASSET_BASE}/shop_${key}.png`;
 }
 
 /**
- * Returns true when the user already owns the piece of gear identified by `key`.
- * The API sends `items.gear.owned` as `{ "weapon_warrior_1": true, ... }`.
- */
-function isOwned(user: HabiticaUser, key: string): boolean {
-  return user.items.gear.owned?.[key] === true;
-}
-
-/**
- * Build the list of purchasable in-game gear items for this user.
- * Mirrors the Rewards tab on the Habitica web app:
- *   – only gear buyable with GP (value > 0)
- *   – items the user doesn't already own
- *   – sorted by tier within each gear type
+ * Build the list of purchasable gear items for the given user.
+ *
+ * Mirrors exactly what the web Rewards tab shows:
+ *   - Only the user's own class gear (klass === user's class)
+ *   - Items the user doesn't already own
+ *   - Sorted by value (ascending) within each gear type
  */
 function buildGearItems(user: HabiticaUser, content: HabiticaContent): ShopItem[] {
+  const userClass = user.stats.class ?? "warrior";
+  const ownedKeys = user.items.gear.owned ?? {};
+
   return Object.entries(content.gear.flat)
-    .filter(([key, gear]) => gear.value > 0 && !isOwned(user, key))
-    .sort((a, b) => (a[1].tier ?? 0) - (b[1].tier ?? 0))
-    .map(([key, gear]) => ({
-      id: `gear:${key}`,
-      text: gear.text,
-      notes: gear.notes,
-      value: gear.value,
-      type: "gear" as const,
-      gearKey: key,
-    }));
+    .filter(([key, gear]) =>
+      gear.klass === userClass &&
+      gear.value > 0 &&
+      !ownedKeys[key]
+    )
+    .sort((a, b) => a[1].value - b[1].value)
+    .map(([key, gear]) => {
+      const imgUrl = gearImageUrl(key);
+      return {
+        id: `gear:${key}`,
+        text: gear.text,
+        notes: gear.notes,
+        value: gear.value,
+        type: "gear" as const,
+        gearKey: key,
+        imageUrl: imgUrl,
+      };
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -95,7 +104,7 @@ export default function Command() {
       setUser(userData);
 
       const shopItems: ShopItem[] = [
-        // ── Market items ────────────────────────────────────────────────────
+        // Market items
         ...(userData.stats.hp < (userData.stats.maxHealth ?? 50)
           ? [{
               id: "health_potion",
@@ -104,6 +113,7 @@ export default function Command() {
               value: 25,
               type: "market" as const,
               icon: Icon.Heart,
+              imageUrl: `${GEAR_ASSET_BASE}/shop_health_potion.png`,
             }]
           : []),
         ...(userData.stats.lvl >= 10
@@ -114,13 +124,12 @@ export default function Command() {
               value: 100,
               type: "market" as const,
               icon: Icon.Box,
+              imageUrl: `${GEAR_ASSET_BASE}/shop_armoire.png`,
             }]
           : []),
-
-        // ── In-game gear rewards (matches web Rewards tab) ─────────────────
+        // In-game gear (user's class only, not yet owned)
         ...buildGearItems(userData, content),
-
-        // ── User-created custom rewards ─────────────────────────────────────
+        // User-created custom rewards
         ...rewards.map((r) => ({
           id: r.id,
           text: r.text,
@@ -188,12 +197,34 @@ export default function Command() {
     return acc;
   }, {});
 
-  const goldLabel = user ? `${user.stats.gp.toFixed(2)} Gold` : undefined;
+  const goldLabel = user ? `${user.stats.gp.toFixed(2)} GP` : undefined;
+
+  /** Render a consistent detail panel for any shop item. */
+  function renderDetail(item: ShopItem, categoryLabel?: string) {
+    return (
+      <List.Item.Detail
+        markdown={item.imageUrl ? `![${item.text}](${item.imageUrl})` : undefined}
+        metadata={
+          <List.Item.Detail.Metadata>
+            <List.Item.Detail.Metadata.Label title="Name" text={item.text} />
+            {item.notes ? <List.Item.Detail.Metadata.Label title="Description" text={item.notes} /> : null}
+            <List.Item.Detail.Metadata.Separator />
+            <List.Item.Detail.Metadata.Label
+              title="Price"
+              text={`${item.value} GP`}
+              icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
+            />
+            {categoryLabel ? <List.Item.Detail.Metadata.Label title="Category" text={categoryLabel} /> : null}
+          </List.Item.Detail.Metadata>
+        }
+      />
+    );
+  }
 
   return (
     <List isLoading={isLoading} searchBarPlaceholder="Search rewards\u2026" navigationTitle="Habitica Rewards" isShowingDetail>
 
-      {/* ── Market ───────────────────────────────────────────────────────── */}
+      {/* Market */}
       <List.Section title="Market" subtitle={goldLabel}>
         {items
           .filter((i) => i.type === "market")
@@ -202,30 +233,12 @@ export default function Command() {
               key={item.id}
               title={item.text}
               subtitle={`${item.value} GP`}
-              icon={item.icon ?? Icon.Cart}
-              detail={
-                <List.Item.Detail
-                  markdown={[
-                    `# ${item.text}`,
-                    item.notes ?? "",
-                    item.id === "health_potion"
-                      ? `![Potion](${GEAR_ASSET_BASE}/shop_health_potion.png)`
-                      : item.id === "enchanted_armoire"
-                      ? `![Armoire](${GEAR_ASSET_BASE}/shop_armoire.png)`
-                      : "",
-                  ].join("\n\n")}
-                  metadata={
-                    <List.Item.Detail.Metadata>
-                      <List.Item.Detail.Metadata.Label
-                        title="Price"
-                        text={`${item.value} GP`}
-                        icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
-                      />
-                      <List.Item.Detail.Metadata.Label title="Type" text="Market" />
-                    </List.Item.Detail.Metadata>
-                  }
-                />
+              icon={
+                item.imageUrl
+                  ? { source: item.imageUrl, mask: Image.Mask.RoundedRectangle }
+                  : (item.icon ?? Icon.Cart)
               }
+              detail={renderDetail(item, "Market")}
               actions={
                 <ActionPanel>
                   <Action title="Buy Item" icon={Icon.Cart} onAction={() => handleBuy(item)} />
@@ -236,40 +249,24 @@ export default function Command() {
           ))}
       </List.Section>
 
-      {/* ── In-game gear rewards (one section per gear type) ─────────────── */}
+      {/* In-game gear (one section per gear type, empty sections hidden) */}
       {GEAR_TYPE_ORDER.map((gearType) => {
         const gearItems = gearByType[gearType];
         if (!gearItems || gearItems.length === 0) return null;
+        const label = GEAR_TYPE_LABEL[gearType] ?? gearType;
         return (
-          <List.Section key={gearType} title={GEAR_TYPE_LABEL[gearType] ?? gearType} subtitle={goldLabel}>
+          <List.Section key={gearType} title={label} subtitle={goldLabel}>
             {gearItems.map((item) => (
               <List.Item
                 key={item.id}
                 title={item.text}
                 subtitle={`${item.value} GP`}
-                icon={Icon.Hammer}
-                detail={
-                  <List.Item.Detail
-                    markdown={[
-                      `# ${item.text}`,
-                      item.notes ?? "",
-                      item.gearKey ? `![${item.text}](${gearImageUrl(item.gearKey)})` : "",
-                    ].join("\n\n")}
-                    metadata={
-                      <List.Item.Detail.Metadata>
-                        <List.Item.Detail.Metadata.Label
-                          title="Price"
-                          text={`${item.value} GP`}
-                          icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
-                        />
-                        <List.Item.Detail.Metadata.Label
-                          title="Category"
-                          text={GEAR_TYPE_LABEL[gearType] ?? gearType}
-                        />
-                      </List.Item.Detail.Metadata>
-                    }
-                  />
+                icon={
+                  item.imageUrl
+                    ? { source: item.imageUrl, mask: Image.Mask.RoundedRectangle }
+                    : Icon.Hammer
                 }
+                detail={renderDetail(item, label)}
                 actions={
                   <ActionPanel>
                     <Action title="Buy Gear" icon={Icon.Cart} onAction={() => handleBuy(item)} />
@@ -282,7 +279,7 @@ export default function Command() {
         );
       })}
 
-      {/* ── Custom Rewards ───────────────────────────────────────────────── */}
+      {/* Custom Rewards */}
       <List.Section title="Custom Rewards" subtitle={goldLabel}>
         {items
           .filter((i) => i.type === "reward")
@@ -292,21 +289,7 @@ export default function Command() {
               title={item.text}
               subtitle={`${item.value} GP`}
               icon={Icon.Stars}
-              detail={
-                <List.Item.Detail
-                  markdown={`# ${item.text}\n\n${item.notes ?? "*No description*"}`}
-                  metadata={
-                    <List.Item.Detail.Metadata>
-                      <List.Item.Detail.Metadata.Label
-                        title="Price"
-                        text={`${item.value} GP`}
-                        icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
-                      />
-                      <List.Item.Detail.Metadata.Label title="Type" text="Custom Reward" />
-                    </List.Item.Detail.Metadata>
-                  }
-                />
-              }
+              detail={renderDetail(item, "Custom Reward")}
               actions={
                 <ActionPanel>
                   <Action title="Buy Reward" icon={Icon.Cart} onAction={() => handleBuy(item)} />
