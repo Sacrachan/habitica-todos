@@ -13,9 +13,9 @@ function buildInventoryEntries(record: Record<string, number> | undefined): Inve
 }
 
 export default function Command() {
-  const [user,      setUser]      = useState<HabiticaUser | null>(null);
+  const [user, setUser] = useState<HabiticaUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [category,  setCategory]  = useState("all");
+  const [category, setCategory] = useState("all");
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -28,16 +28,43 @@ export default function Command() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const items = user?.items;
 
   const categories: { key: string; label: string; entries: InventoryEntry[]; imageUrl: (k: string) => string }[] = [
-    { key: "eggs",    label: "Eggs",             entries: buildInventoryEntries(items?.eggs),            imageUrl: (k) => `${ASSET_BASE_URL}Pet_Egg_${k}.png` },
-    { key: "potions", label: "Hatching Potions", entries: buildInventoryEntries(items?.hatchingPotions), imageUrl: (k) => `${ASSET_BASE_URL}Pet_HatchingPotion_${k}.png` },
-    { key: "food",    label: "Food",             entries: buildInventoryEntries(items?.food),            imageUrl: (k) => `${ASSET_BASE_URL}Pet_Food_${k}.png` },
-    { key: "special", label: "Special",          entries: buildInventoryEntries(items?.special),         imageUrl: (k) => `${ASSET_BASE_URL}shop_${k}.png` },
-    { key: "quests",  label: "Quests",           entries: buildInventoryEntries(items?.quests),          imageUrl: (k) => `${ASSET_BASE_URL}inventory_quest_scroll_${k}.png` },
+    {
+      key: "eggs",
+      label: "Eggs",
+      entries: buildInventoryEntries(items?.eggs),
+      imageUrl: (k) => `${ASSET_BASE_URL}Pet_Egg_${k}.png`,
+    },
+    {
+      key: "potions",
+      label: "Hatching Potions",
+      entries: buildInventoryEntries(items?.hatchingPotions),
+      imageUrl: (k) => `${ASSET_BASE_URL}Pet_HatchingPotion_${k}.png`,
+    },
+    {
+      key: "food",
+      label: "Food",
+      entries: buildInventoryEntries(items?.food),
+      imageUrl: (k) => `${ASSET_BASE_URL}Pet_Food_${k}.png`,
+    },
+    {
+      key: "special",
+      label: "Special",
+      entries: buildInventoryEntries(items?.special),
+      imageUrl: (k) => `${ASSET_BASE_URL}shop_${k}.png`,
+    },
+    {
+      key: "quests",
+      label: "Quests",
+      entries: buildInventoryEntries(items?.quests),
+      imageUrl: (k) => `${ASSET_BASE_URL}inventory_quest_scroll_${k}.png`,
+    },
   ];
 
   const visibleCategories = category === "all" ? categories : categories.filter((c) => c.key === category);
@@ -45,8 +72,17 @@ export default function Command() {
 
   const inventoryActions = (
     <ActionPanel>
-      <Action title="Refresh" icon={Icon.ArrowClockwise} shortcut={{ modifiers: ["cmd"], key: "r" }} onAction={fetchData} />
-      <Action.OpenInBrowser title="Open Habitica Inventory" url="https://habitica.com/inventory/items" shortcut={{ modifiers: ["cmd"], key: "o" }} />
+      <Action
+        title="Refresh"
+        icon={Icon.ArrowClockwise}
+        shortcut={{ modifiers: ["cmd"], key: "r" }}
+        onAction={fetchData}
+      />
+      <Action.OpenInBrowser
+        title="Open Habitica Inventory"
+        url="https://habitica.com/inventory/items"
+        shortcut={{ modifiers: ["cmd"], key: "o" }}
+      />
     </ActionPanel>
   );
 
@@ -57,12 +93,12 @@ export default function Command() {
       columns={8}
       searchBarAccessory={
         <Grid.Dropdown tooltip="Filter Category" onChange={setCategory} value={category}>
-          <Grid.Dropdown.Item title="All Items"            value="all"     />
-          <Grid.Dropdown.Item title="Eggs"                 value="eggs"    />
-          <Grid.Dropdown.Item title="Hatching Potions"     value="potions" />
-          <Grid.Dropdown.Item title="Pet Food and Saddles" value="food"    />
-          <Grid.Dropdown.Item title="Special"              value="special" />
-          <Grid.Dropdown.Item title="Quests"               value="quests"  />
+          <Grid.Dropdown.Item title="All Items" value="all" />
+          <Grid.Dropdown.Item title="Eggs" value="eggs" />
+          <Grid.Dropdown.Item title="Hatching Potions" value="potions" />
+          <Grid.Dropdown.Item title="Pet Food and Saddles" value="food" />
+          <Grid.Dropdown.Item title="Special" value="special" />
+          <Grid.Dropdown.Item title="Quests" value="quests" />
         </Grid.Dropdown>
       }
     >
@@ -74,7 +110,13 @@ export default function Command() {
           .map((c) => (
             <Grid.Section key={c.key} title={`${c.label} (${c.entries.length})`}>
               {c.entries.map(([key, count]) => (
-                <Grid.Item key={`${c.key}-${key}`} title={key} subtitle={`×${count}`} content={c.imageUrl(key)} actions={inventoryActions} />
+                <Grid.Item
+                  key={`${c.key}-${key}`}
+                  title={key}
+                  subtitle={`×${count}`}
+                  content={c.imageUrl(key)}
+                  actions={inventoryActions}
+                />
               ))}
             </Grid.Section>
           ))

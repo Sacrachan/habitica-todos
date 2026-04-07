@@ -1,13 +1,6 @@
 import { getPreferenceValues } from "@raycast/api";
 import fetch from "node-fetch";
-import {
-  HabiticaTask,
-  HabiticaUser,
-  HabiticaContent,
-  HabiticaTag,
-  CreateTaskBody,
-  UpdateTaskBody,
-} from "./types";
+import { HabiticaTask, HabiticaUser, HabiticaContent, HabiticaTag, CreateTaskBody, UpdateTaskBody } from "./types";
 
 interface Preferences {
   apiUserId: string;
@@ -21,7 +14,7 @@ const HABITICA_API_URL = "https://habitica.com";
 // ---------------------------------------------------------------------------
 
 const TASKS_TTL_MS = 30_000;
-const USER_TTL_MS  = 30_000;
+const USER_TTL_MS = 30_000;
 
 interface CacheEntry<T> {
   data: T;
@@ -29,9 +22,9 @@ interface CacheEntry<T> {
 }
 
 const cache: {
-  tasks:   Map<string, CacheEntry<HabiticaTask[]>>;
-  tags:    CacheEntry<HabiticaTag[]>    | null;
-  user:    CacheEntry<HabiticaUser>     | null;
+  tasks: Map<string, CacheEntry<HabiticaTask[]>>;
+  tags: CacheEntry<HabiticaTag[]> | null;
+  user: CacheEntry<HabiticaUser> | null;
   content: CacheEntry<HabiticaContent> | null;
 } = { tasks: new Map(), tags: null, user: null, content: null };
 
@@ -40,8 +33,12 @@ function isFresh<T>(entry: CacheEntry<T> | null): entry is CacheEntry<T> {
   return entry.expiresAt === 0 || Date.now() < entry.expiresAt;
 }
 
-export function invalidateTasksCache(): void { cache.tasks.clear(); }
-export function invalidateUserCache():  void { cache.user = null; }
+export function invalidateTasksCache(): void {
+  cache.tasks.clear();
+}
+export function invalidateUserCache(): void {
+  cache.user = null;
+}
 
 // ---------------------------------------------------------------------------
 // Core fetch helper
@@ -53,9 +50,9 @@ async function habiticaFetch<T>(endpoint: string, options: { method?: string; bo
   const response = await fetch(`${HABITICA_API_URL}${endpoint}`, {
     ...options,
     headers: {
-      "x-api-user":   apiUserId,
-      "x-api-key":    apiToken,
-      "x-client":     `${apiUserId}-habitica-todos`,
+      "x-api-user": apiUserId,
+      "x-api-key": apiToken,
+      "x-client": `${apiUserId}-habitica-todos`,
       "Content-Type": "application/json",
     },
   });
@@ -116,9 +113,7 @@ export async function deleteTask(taskId: string): Promise<void> {
 
 export async function getUser(): Promise<HabiticaUser> {
   if (isFresh(cache.user)) return cache.user.data;
-  const data = await habiticaFetch<HabiticaUser>(
-    "/api/v3/user?userFields=stats,party,items,profile,preferences"
-  );
+  const data = await habiticaFetch<HabiticaUser>("/api/v3/user?userFields=stats,party,items,profile,preferences");
   cache.user = { data, expiresAt: Date.now() + USER_TTL_MS };
   return data;
 }

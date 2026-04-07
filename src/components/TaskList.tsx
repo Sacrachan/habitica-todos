@@ -84,8 +84,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     fetchData();
   }, [fetchData]);
 
-  const filteredTasks =
-    tagFilter === TAG_FILTER_ALL ? tasks : tasks.filter((t) => t.tags.includes(tagFilter));
+  const filteredTasks = tagFilter === TAG_FILTER_ALL ? tasks : tasks.filter((t) => t.tags.includes(tagFilter));
 
   async function handleScore(task: HabiticaTask, direction: "up" | "down" = "up") {
     let actionName = "Completing";

@@ -19,8 +19,8 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   const layerUrls: string[] = [];
   const size = preferences?.size === "slim" ? "slim" : "broad";
 
-  if (preferences?.background)  layerUrls.push(`${ASSET_BASE_URL}background_${preferences.background}.png`);
-  if (items?.currentMount)       layerUrls.push(`${ASSET_BASE_URL}Mount_Body_${items.currentMount}.png`);
+  if (preferences?.background) layerUrls.push(`${ASSET_BASE_URL}background_${preferences.background}.png`);
+  if (items?.currentMount) layerUrls.push(`${ASSET_BASE_URL}Mount_Body_${items.currentMount}.png`);
 
   const back = items?.gear?.equipped?.back;
   if (back) layerUrls.push(`${ASSET_BASE_URL}${back}.png`);
@@ -37,22 +37,22 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
 
   const hair = preferences?.hair;
   if (hair) {
-    if (hair.base)      layerUrls.push(`${ASSET_BASE_URL}hair_base_${hair.base}_${hair.color ?? "black"}.png`);
-    if (hair.bangs)     layerUrls.push(`${ASSET_BASE_URL}hair_bangs_${hair.bangs}_${hair.color ?? "black"}.png`);
-    if (hair.mustache)  layerUrls.push(`${ASSET_BASE_URL}hair_mustache_${hair.mustache}_${hair.color ?? "black"}.png`);
-    if (hair.beard)     layerUrls.push(`${ASSET_BASE_URL}hair_beard_${hair.beard}_${hair.color ?? "black"}.png`);
+    if (hair.base) layerUrls.push(`${ASSET_BASE_URL}hair_base_${hair.base}_${hair.color ?? "black"}.png`);
+    if (hair.bangs) layerUrls.push(`${ASSET_BASE_URL}hair_bangs_${hair.bangs}_${hair.color ?? "black"}.png`);
+    if (hair.mustache) layerUrls.push(`${ASSET_BASE_URL}hair_mustache_${hair.mustache}_${hair.color ?? "black"}.png`);
+    if (hair.beard) layerUrls.push(`${ASSET_BASE_URL}hair_beard_${hair.beard}_${hair.color ?? "black"}.png`);
   }
 
   const gear = items?.gear?.equipped ?? {};
-  if (gear.body)            layerUrls.push(`${ASSET_BASE_URL}${gear.body}.png`);
-  if (gear.eyewear)         layerUrls.push(`${ASSET_BASE_URL}${gear.eyewear}.png`);
+  if (gear.body) layerUrls.push(`${ASSET_BASE_URL}${gear.body}.png`);
+  if (gear.eyewear) layerUrls.push(`${ASSET_BASE_URL}${gear.eyewear}.png`);
   if (gear.head && gear.head !== "head_base_0") layerUrls.push(`${ASSET_BASE_URL}${gear.head}.png`);
-  if (gear.headAccessory)   layerUrls.push(`${ASSET_BASE_URL}${gear.headAccessory}.png`);
-  if (hair?.flower)         layerUrls.push(`${ASSET_BASE_URL}hair_flower_${hair.flower}.png`);
-  if (gear.shield)          layerUrls.push(`${ASSET_BASE_URL}${gear.shield}.png`);
-  if (gear.weapon)          layerUrls.push(`${ASSET_BASE_URL}${gear.weapon}.png`);
-  if (items?.currentMount)  layerUrls.push(`${ASSET_BASE_URL}Mount_Head_${items.currentMount}.png`);
-  if (items?.currentPet)    layerUrls.push(`${ASSET_BASE_URL}Pet-${items.currentPet}.png`);
+  if (gear.headAccessory) layerUrls.push(`${ASSET_BASE_URL}${gear.headAccessory}.png`);
+  if (hair?.flower) layerUrls.push(`${ASSET_BASE_URL}hair_flower_${hair.flower}.png`);
+  if (gear.shield) layerUrls.push(`${ASSET_BASE_URL}${gear.shield}.png`);
+  if (gear.weapon) layerUrls.push(`${ASSET_BASE_URL}${gear.weapon}.png`);
+  if (items?.currentMount) layerUrls.push(`${ASSET_BASE_URL}Mount_Head_${items.currentMount}.png`);
+  if (items?.currentPet) layerUrls.push(`${ASSET_BASE_URL}Pet-${items.currentPet}.png`);
 
   const layers = (await Promise.all(layerUrls.map(fetchImageAsBase64))).filter(Boolean);
   const offsetY = items?.currentMount ? 0 : 12;
