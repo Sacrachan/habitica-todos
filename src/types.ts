@@ -72,6 +72,8 @@ export interface HabiticaUser {
     size: string;
     background: string;
     sleep: boolean;
+    /** Chair/wheelchair style. Empty string means no chair. */
+    chair?: string;
   };
 }
 
