@@ -18,11 +18,18 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   const hair = preferences?.hair;
   const gear = items?.gear?.equipped ?? {};
 
-  // All mobile PNGs are 140x140 and self-positioned — no manual x/y offset needed.
-  // We build the layer list in the exact order Habitica's avatar.vue renders them.
+  // Habitica's avatar container is 141x147px (width/height props in avatar.vue).
+  // All mobile PNGs are 140x140 and self-positioned within that space.
+  // We render the SVG at 140x140 output but use viewBox="0 0 141 147" so all
+  // sprites scale down proportionally, matching the Habitica website appearance.
+  const VIEW_W = 141;
+  const VIEW_H = 147;
+  const OUT_SIZE = 140;
+  const SPRITE = 140;
+
   const urls: string[] = [];
 
-  // Background fills the whole canvas
+  // Background
   if (preferences?.background) urls.push(`${ASSET_BASE_URL}background_${preferences.background}.png`);
 
   // Mount body — behind everything
@@ -31,8 +38,6 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   // hair_flower rendered unconditionally BEFORE all avatar layers
   // (official comment: "Show flower ALL THE TIME!!!")
   if (hair?.flower) urls.push(`${ASSET_BASE_URL}hair_flower_${hair.flower}.png`);
-
-  // --- Avatar layers ---
 
   // Chair / wheelchair
   if (preferences?.chair) urls.push(`${ASSET_BASE_URL}chair_${preferences.chair}.png`);
@@ -56,7 +61,7 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
     urls.push(`${ASSET_BASE_URL}${size}_${gear.armor}.png`);
   }
 
-  // Back collar (rendered after armor in official source)
+  // Back collar
   if (gear.back_collar) urls.push(`${ASSET_BASE_URL}${gear.back_collar}.png`);
 
   // Hair — official order: bangs → base → mustache → beard
@@ -89,16 +94,26 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   // Mount head — in front of avatar
   if (items?.currentMount) urls.push(`${ASSET_BASE_URL}Mount_Head_${items.currentMount}.png`);
 
-  // Pet — the PNG is self-positioned within the 140x140 canvas
+  // Pet — self-positioned within 140x140 canvas
   if (items?.currentPet) urls.push(`${ASSET_BASE_URL}Pet-${items.currentPet}.png`);
 
   const layers = (await Promise.all(urls.map(fetchImageAsBase64))).filter(Boolean);
 
   const images = layers
-    .map((d) => `<image xlink:href="${d}" x="0" y="0" width="140" height="140"/>`)
+    .map((d) => `<image xlink:href="${d}" x="0" y="0" width="${SPRITE}" height="${SPRITE}"/>`)
     .join("");
 
-  const svg = `<?xml version="1.0" encoding="UTF-8"?><svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><rect width="140" height="140" fill="transparent"/>${images}</svg>`;
+  // viewBox="0 0 141 147" crops and scales sprites to match Habitica's container
+  const svg = [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<svg width="${OUT_SIZE}" height="${OUT_SIZE}"`,
+    ` viewBox="0 0 ${VIEW_W} ${VIEW_H}"`,
+    ` xmlns="http://www.w3.org/2000/svg"`,
+    ` xmlns:xlink="http://www.w3.org/1999/xlink">`,
+    `<rect width="${VIEW_W}" height="${VIEW_H}" fill="transparent"/>`,
+    images,
+    `</svg>`,
+  ].join("");
 
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
