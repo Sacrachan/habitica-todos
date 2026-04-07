@@ -52,6 +52,16 @@ function gearImageUrl(key: string): string {
 }
 
 /**
+ * Build a markdown string that renders the item image at a large size.
+ * Raycast's detail panel honours inline HTML, so we use an <img> tag with
+ * an explicit width instead of the standard ![alt](url) syntax which renders
+ * the sprite at its native 68x68px size.
+ */
+function imageMarkdown(url: string, alt: string): string {
+  return `<img src="${url}" alt="${alt}" width="220" />`;
+}
+
+/**
  * Build the list of purchasable gear items for the given user.
  * Mirrors the web Rewards tab: user's class only, not yet owned, sorted by price.
  */
@@ -97,7 +107,6 @@ export default function Command() {
       setUser(userData);
 
       const shopItems: ShopItem[] = [
-        // Market items
         // Note: shop_health_potion.png returns 403 on S3, so no imageUrl — Icon.Heart is used instead.
         ...(userData.stats.hp < (userData.stats.maxHealth ?? 50)
           ? [{
@@ -120,9 +129,7 @@ export default function Command() {
               imageUrl: `${GEAR_ASSET_BASE}/shop_armoire.png`,
             }]
           : []),
-        // In-game gear (user's class only, not yet owned)
         ...buildGearItems(userData, content),
-        // User-created custom rewards
         ...rewards.map((r) => ({
           id: r.id,
           text: r.text,
@@ -182,7 +189,6 @@ export default function Command() {
     }
   }
 
-  // Group gear items by type for section rendering
   const gearByType = GEAR_TYPE_ORDER.reduce<Record<string, ShopItem[]>>((acc, gearType) => {
     acc[gearType] = items.filter(
       (i) => i.type === "gear" && i.gearKey?.startsWith(gearType + "_")
@@ -192,11 +198,10 @@ export default function Command() {
 
   const goldLabel = user ? `${user.stats.gp.toFixed(2)} GP` : undefined;
 
-  /** Render a consistent detail panel for any shop item. */
   function renderDetail(item: ShopItem, categoryLabel?: string) {
     return (
       <List.Item.Detail
-        markdown={item.imageUrl ? `![${item.text}](${item.imageUrl})` : undefined}
+        markdown={item.imageUrl ? imageMarkdown(item.imageUrl, item.text) : undefined}
         metadata={
           <List.Item.Detail.Metadata>
             <List.Item.Detail.Metadata.Label title="Name" text={item.text} />
