@@ -1,5 +1,4 @@
 import { getPreferenceValues } from "@raycast/api";
-import fetch from "node-fetch";
 import { HabiticaTask, HabiticaUser, HabiticaContent, HabiticaTag, CreateTaskBody, UpdateTaskBody } from "./types";
 
 interface Preferences {
