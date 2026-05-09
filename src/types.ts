@@ -58,6 +58,7 @@ export interface HabiticaUser {
     special: Record<string, number>;
     gear: {
       equipped: Record<string, string>;
+      costume: Record<string, string>;
       owned: Record<string, boolean>;
     };
     pets: Record<string, number>;
@@ -72,8 +73,10 @@ export interface HabiticaUser {
     size: string;
     background: string;
     sleep: boolean;
-    /** Chair/wheelchair style. Empty string means no chair. */
+    /** Chair/wheelchair style. "none" or empty string means no chair. */
     chair?: string;
+    /** When true, render costume gear instead of equipped gear. */
+    costume?: boolean;
   };
 }
 

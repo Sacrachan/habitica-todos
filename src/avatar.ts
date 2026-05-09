@@ -16,7 +16,9 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   const { preferences, items } = user;
   const size = preferences?.size === "slim" ? "slim" : "broad";
   const hair = preferences?.hair;
-  const gear = items?.gear?.equipped ?? {};
+  // Habitica's avatar.vue uses costume gear when preferences.costume is true,
+  // otherwise equipped gear. See computed property `costumeClass`.
+  const gear = (preferences?.costume ? items?.gear?.costume : items?.gear?.equipped) ?? {};
 
   // Habitica's avatar container is 141x147px (width/height props in avatar.vue).
   // All mobile PNGs are 140x140 and self-positioned within that space.
@@ -39,11 +41,13 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   // (official comment: "Show flower ALL THE TIME!!!")
   if (hair?.flower) urls.push(`${ASSET_BASE_URL}hair_flower_${hair.flower}.png`);
 
-  // Chair / wheelchair
-  if (preferences?.chair) urls.push(`${ASSET_BASE_URL}chair_${preferences.chair}.png`);
+  // Chair / wheelchair — "none" is Habitica's sentinel for "no chair"
+  if (preferences?.chair && preferences.chair !== "none") {
+    urls.push(`${ASSET_BASE_URL}chair_${preferences.chair}.png`);
+  }
 
   // Back gear
-  if (gear.back) urls.push(`${ASSET_BASE_URL}${gear.back}.png`);
+  if (gear.back && gear.back !== "back_base_0") urls.push(`${ASSET_BASE_URL}${gear.back}.png`);
 
   // Skin
   if (preferences?.skin) {
@@ -71,25 +75,27 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   if (hair?.beard) urls.push(`${ASSET_BASE_URL}hair_beard_${hair.beard}_${hair.color ?? "black"}.png`);
 
   // Body gear
-  if (gear.body) urls.push(`${ASSET_BASE_URL}${gear.body}.png`);
+  if (gear.body && gear.body !== "body_base_0") urls.push(`${ASSET_BASE_URL}${gear.body}.png`);
 
   // Eyewear
-  if (gear.eyewear) urls.push(`${ASSET_BASE_URL}${gear.eyewear}.png`);
+  if (gear.eyewear && gear.eyewear !== "eyewear_base_0") urls.push(`${ASSET_BASE_URL}${gear.eyewear}.png`);
 
   // Head gear
   if (gear.head && gear.head !== "head_base_0") urls.push(`${ASSET_BASE_URL}${gear.head}.png`);
 
   // Head accessory
-  if (gear.headAccessory) urls.push(`${ASSET_BASE_URL}${gear.headAccessory}.png`);
+  if (gear.headAccessory && gear.headAccessory !== "headAccessory_base_0") {
+    urls.push(`${ASSET_BASE_URL}${gear.headAccessory}.png`);
+  }
 
   // hair_flower again inside avatar layers (official renders it in both places)
   if (hair?.flower) urls.push(`${ASSET_BASE_URL}hair_flower_${hair.flower}.png`);
 
   // Shield
-  if (gear.shield) urls.push(`${ASSET_BASE_URL}${gear.shield}.png`);
+  if (gear.shield && gear.shield !== "shield_base_0") urls.push(`${ASSET_BASE_URL}${gear.shield}.png`);
 
   // Weapon
-  if (gear.weapon) urls.push(`${ASSET_BASE_URL}${gear.weapon}.png`);
+  if (gear.weapon && gear.weapon !== "weapon_base_0") urls.push(`${ASSET_BASE_URL}${gear.weapon}.png`);
 
   // Mount head — in front of avatar
   if (items?.currentMount) urls.push(`${ASSET_BASE_URL}Mount_Head_${items.currentMount}.png`);
