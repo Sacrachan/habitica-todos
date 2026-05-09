@@ -1,13 +1,16 @@
 import { HabiticaUser } from "./types";
 import { ASSET_BASE_URL } from "./constants";
 
-// Avatar canvas dimensions match Habitica's `.avatar` container in avatar.vue
-// (width: 141px, height: 147px). Sprites box (`.character-sprites`) is 90x90,
-// positioned at margin-left:24 inside .avatar. The avatar's padding-top is 24
-// by default, but 0 when the user has a mount (so the mount fits at the top).
+// Avatar canvas dimensions match Habitica's `.avatar` container (141x147).
+// Per-layer offsets follow Habitica Android's AvatarView.kt — the canonical
+// rendering for these mobile PNGs. The web (avatar.vue) draws every sprite at
+// `.character-sprites`'s static position, but the mobile PNGs were authored
+// for the Android layout where mount sprites sit lower than body sprites so
+// the rider lands on the saddle instead of floating above it.
 const VIEW_W = 141;
 const VIEW_H = 147;
 const SPRITES_X = 24;
+const MOUNT_Y = 18;
 
 function getPngDimensions(buffer: ArrayBuffer): { width: number; height: number } | null {
   if (buffer.byteLength < 24) return null;
@@ -41,7 +44,7 @@ async function fetchPngLayer(url: string): Promise<Layer | null> {
 }
 
 /** How a layer is positioned within the 141x147 avatar canvas. */
-type Anchor = "background" | "sprites" | "pet";
+type Anchor = "background" | "sprites" | "mount" | "pet";
 
 interface LayerSpec {
   url: string;
@@ -56,9 +59,16 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
   // otherwise equipped gear. See computed property `costumeClass`.
   const gear = (preferences?.costume ? items?.gear?.costume : items?.gear?.equipped) ?? {};
 
-  // paddingTop in avatar.vue: 0 when mount, 24 otherwise. This shifts the
-  // sprites box down so the pet/character has room when no mount is present.
-  const spritesY = items?.currentMount ? 0 : 24;
+  // Body-layer Y offset, per AvatarView.kt's full-hero-box logic:
+  //   - mount equipped:        0  (Kangaroo: 18, since its sprite has different proportions)
+  //   - pet but no mount:      24
+  //   - neither mount nor pet: 28
+  // This keeps the rider centered on the saddle when a mount is present,
+  // and gives the pet enough headroom in the bottom-left corner otherwise.
+  const hasMount = !!items?.currentMount;
+  const hasPet = !!items?.currentPet;
+  const isKangaroo = items?.currentMount?.includes("Kangaroo") ?? false;
+  const spritesY = hasMount ? (isKangaroo ? 18 : 0) : hasPet ? 24 : 28;
 
   const specs: LayerSpec[] = [];
 
@@ -68,9 +78,9 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
     specs.push({ url: `${ASSET_BASE_URL}background_${preferences.background}.png`, anchor: "background" });
   }
 
-  // Mount body — first sprite span in avatar.vue (before visualBuffs/avatar)
+  // Mount body — drawn lower than body sprites so the rider sits on the saddle
   if (items?.currentMount) {
-    specs.push({ url: `${ASSET_BASE_URL}Mount_Body_${items.currentMount}.png`, anchor: "sprites" });
+    specs.push({ url: `${ASSET_BASE_URL}Mount_Body_${items.currentMount}.png`, anchor: "mount" });
   }
 
   // hair_flower rendered unconditionally BEFORE all avatar layers
@@ -161,9 +171,9 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
     specs.push({ url: `${ASSET_BASE_URL}${gear.weapon}.png`, anchor: "sprites" });
   }
 
-  // Mount head — in front of avatar layers
+  // Mount head — same offset as mount body, drawn after the rider
   if (items?.currentMount) {
-    specs.push({ url: `${ASSET_BASE_URL}Mount_Head_${items.currentMount}.png`, anchor: "sprites" });
+    specs.push({ url: `${ASSET_BASE_URL}Mount_Head_${items.currentMount}.png`, anchor: "mount" });
   }
 
   // Pet — in avatar.vue, .current-pet has bottom:0; left:0; relative to .avatar
@@ -184,9 +194,14 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
         // Background fills the 141x147 avatar at its native PNG size.
         x = 0;
         y = 0;
+      } else if (l.anchor === "mount") {
+        // Mount body/head are anchored 18px lower than body sprites so the
+        // rider lands on the saddle (per AvatarView.kt FULL_HERO_RECT logic).
+        x = SPRITES_X;
+        y = MOUNT_Y;
       } else if (l.anchor === "sprites") {
-        // Avatar sprites stack at the top-left of `.character-sprites` —
-        // (24, spritesY) within the 141x147 avatar container.
+        // Body sprites stack at (24, spritesY); spritesY varies with whether
+        // a mount or pet is present.
         x = SPRITES_X;
         y = spritesY;
       } else {
