@@ -83,7 +83,7 @@ export async function getAvatarSvg(user: HabiticaUser): Promise<string> {
     specs.push({ url: `${ASSET_BASE_URL}Mount_Body_${items.currentMount}.png`, anchor: "mount" });
   }
 
-  // hair_flower rendered unconditionally BEFORE all avatar layers
+  // hair_flower rendered BEFORE all avatar layers, then again inside them below
   // (official comment: "Show flower ALL THE TIME!!!")
   if (hair?.flower) specs.push({ url: `${ASSET_BASE_URL}hair_flower_${hair.flower}.png`, anchor: "sprites" });
 

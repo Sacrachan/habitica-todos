@@ -2,6 +2,7 @@ import { ActionPanel, Action, Icon, List, showToast, Toast, Color, Image } from 
 import { useEffect, useState, useCallback } from "react";
 import { getTasks, getUser, getContent, buyHealthPotion, buyGear, scoreTask, buyArmoire } from "./api";
 import { HabiticaUser, HabiticaContent } from "./types";
+import { ASSET_BASE_URL } from "./constants";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -74,7 +75,6 @@ function matchesFilter(item: ShopItem, filter: FilterValue, userGp: number): boo
 // Constants
 // ---------------------------------------------------------------------------
 
-const GEAR_ASSET_BASE = "https://habitica-assets.s3.amazonaws.com/mobileApp/images";
 const GEAR_TYPE_ORDER = ["weapon", "armor", "head", "shield", "headAccessory", "eyewear", "back", "body"];
 const GEAR_TYPE_LABEL: Record<string, string> = {
   weapon: "Weapon",
@@ -105,7 +105,7 @@ function gearTypeFromKey(key: string): string {
 // ---------------------------------------------------------------------------
 
 function gearImageUrl(key: string): string {
-  return `${GEAR_ASSET_BASE}/shop_${key}.png`;
+  return `${ASSET_BASE_URL}shop_${key}.png`;
 }
 
 function imageMarkdown(url: string, alt: string): string {
@@ -174,7 +174,7 @@ export default function Command() {
                 value: 100,
                 type: "market" as const,
                 icon: Icon.Box,
-                imageUrl: `${GEAR_ASSET_BASE}/shop_armoire.png`,
+                imageUrl: `${ASSET_BASE_URL}shop_armoire.png`,
               },
             ]
           : []),

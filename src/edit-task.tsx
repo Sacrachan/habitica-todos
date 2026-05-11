@@ -25,9 +25,8 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
       return;
     }
 
-    const body: UpdateTaskBody = { text: values.text.trim() };
+    const body: UpdateTaskBody = { text: values.text.trim(), notes: values.notes.trim() };
 
-    if (values.notes !== undefined) body.notes = values.notes.trim();
     if (values.priority) body.priority = parseFloat(values.priority);
 
     // Only apply date changes for task types that expose the DatePicker

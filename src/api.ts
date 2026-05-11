@@ -27,7 +27,7 @@ const cache: {
   content: CacheEntry<HabiticaContent> | null;
 } = { tasks: new Map(), tags: null, user: null, content: null };
 
-function isFresh<T>(entry: CacheEntry<T> | null): entry is CacheEntry<T> {
+function isFresh<T>(entry: CacheEntry<T> | null | undefined): entry is CacheEntry<T> {
   if (!entry) return false;
   return entry.expiresAt === 0 || Date.now() < entry.expiresAt;
 }
@@ -125,44 +125,32 @@ export async function getContent(): Promise<HabiticaContent> {
   return data;
 }
 
-export async function forceCompleteQuest(): Promise<unknown> {
-  const result = await habiticaFetch("/api/v3/groups/party/quests/force-complete", { method: "POST" });
+export async function forceCompleteQuest(): Promise<void> {
+  await habiticaFetch("/api/v3/groups/party/quests/force-complete", { method: "POST" });
   invalidateUserCache();
-  return result;
 }
 
-export async function acceptQuest(): Promise<unknown> {
-  const result = await habiticaFetch("/api/v3/groups/party/quests/accept", { method: "POST" });
+export async function acceptQuest(): Promise<void> {
+  await habiticaFetch("/api/v3/groups/party/quests/accept", { method: "POST" });
   invalidateUserCache();
-  return result;
 }
 
-export async function abortQuest(): Promise<unknown> {
-  const result = await habiticaFetch("/api/v3/groups/party/quests/abort", { method: "POST" });
+export async function abortQuest(): Promise<void> {
+  await habiticaFetch("/api/v3/groups/party/quests/abort", { method: "POST" });
   invalidateUserCache();
-  return result;
 }
 
-export async function buyGear(key: string): Promise<unknown> {
-  const result = await habiticaFetch(`/api/v3/user/buy-gear/${key}`, { method: "POST" });
+export async function buyGear(key: string): Promise<void> {
+  await habiticaFetch(`/api/v3/user/buy-gear/${key}`, { method: "POST" });
   invalidateUserCache();
-  return result;
 }
 
-export async function buyHealthPotion(): Promise<unknown> {
-  const result = await habiticaFetch("/api/v3/user/buy-health-potion", { method: "POST" });
+export async function buyHealthPotion(): Promise<void> {
+  await habiticaFetch("/api/v3/user/buy-health-potion", { method: "POST" });
   invalidateUserCache();
-  return result;
 }
 
-export async function buyQuest(key: string): Promise<unknown> {
-  const result = await habiticaFetch(`/api/v3/user/purchase/quests/${key}`, { method: "POST" });
+export async function buyArmoire(): Promise<void> {
+  await habiticaFetch("/api/v3/user/buy-armoire", { method: "POST" });
   invalidateUserCache();
-  return result;
-}
-
-export async function buyArmoire(): Promise<unknown> {
-  const result = await habiticaFetch("/api/v3/user/buy-armoire", { method: "POST" });
-  invalidateUserCache();
-  return result;
 }
