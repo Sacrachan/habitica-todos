@@ -116,7 +116,7 @@ export async function deleteTask(taskId: string): Promise<void> {
 export async function getUser(): Promise<HabiticaUser> {
   if (isFresh(cache.user)) return cache.user.data;
   const data = await habiticaFetch<HabiticaUser>(
-    "/api/v3/user?userFields=stats,party,items,profile,preferences,flags,needsCron",
+    "/api/v3/user?userFields=stats,party,items,profile,preferences,flags,needsCron,purchased.plan.mysteryItems",
   );
   cache.user = { data, expiresAt: Date.now() + USER_TTL_MS };
   return data;

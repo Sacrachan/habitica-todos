@@ -50,11 +50,15 @@ export default function FeedForm({ foodKey, pets, onSubmitted }: FeedFormProps) 
       }
     >
       <Form.Description title="Food" text={foodKey} />
-      <Form.Dropdown id="pet" title="Pet">
-        {pets.map(([k, c]) => (
-          <Form.Dropdown.Item key={k} value={k} title={`${k} (×${c})`} />
-        ))}
-      </Form.Dropdown>
+      {pets.length === 0 ? (
+        <Form.Description title="Pet" text="You have no pets to feed. Hatch one first!" />
+      ) : (
+        <Form.Dropdown id="pet" title="Pet">
+          {pets.map(([k, c]) => (
+            <Form.Dropdown.Item key={k} value={k} title={`${k} (×${c})`} />
+          ))}
+        </Form.Dropdown>
+      )}
       <Form.TextField
         id="amount"
         title="Amount"

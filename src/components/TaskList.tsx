@@ -19,9 +19,11 @@ import {
   scoreChecklistItem,
   deleteChecklistItem,
   addChecklistItem,
+  updateChecklistItem,
 } from "../api";
 import { HabiticaTask, HabiticaTag } from "../types";
 import { PRIORITY_LABELS, TAG_FILTER_ALL } from "../constants";
+import { parseHabiticaDate } from "../date-utils";
 import EditTaskForm from "../edit-task";
 import ChecklistForm from "../checklist-form";
 
@@ -32,7 +34,8 @@ interface TaskListProps {
 
 function isTaskExpired(task: HabiticaTask): boolean {
   if (task.completed || !task.date) return false;
-  const dueDate = new Date(task.date);
+  const dueDate = parseHabiticaDate(task.date);
+  if (!dueDate) return false;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   dueDate.setHours(0, 0, 0, 0);
@@ -40,10 +43,15 @@ function isTaskExpired(task: HabiticaTask): boolean {
 }
 
 function formatTaskDate(date: string | null | undefined): string | undefined {
-  if (!date) return undefined;
-  const taskDate = new Date(date);
-  if (Number.isNaN(taskDate.getTime())) return undefined;
+  const taskDate = parseHabiticaDate(date);
+  if (!taskDate) return undefined;
   const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const dayMs = 86_400_000;
+  const diffDays = Math.round((taskDate.getTime() - now.getTime()) / dayMs);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays === -1) return "Yesterday";
   const isCurrentYear = taskDate.getFullYear() === now.getFullYear();
   return taskDate.toLocaleDateString("en-US", {
     month: "short",
@@ -344,24 +352,54 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                           )
                         }
                       />
-                      {checklist.map((item) => (
-                        <Action
-                          key={item.id}
-                          title={`${item.completed ? "Uncheck" : "Check"}: ${item.text}`}
-                          icon={item.completed ? Icon.Circle : Icon.CheckCircle}
-                          onAction={() => handleChecklistScore(task, item)}
-                        />
-                      ))}
-                      {checklist.length > 0 &&
-                        checklist.map((item) => (
-                          <Action
-                            key={`del-${item.id}`}
-                            title={`Delete: ${item.text}`}
-                            icon={Icon.Trash}
-                            style={Action.Style.Destructive}
-                            onAction={() => handleChecklistDelete(task, item)}
-                          />
-                        ))}
+                      {checklist.length > 0 && (
+                        <ActionPanel.Submenu title="Toggle Item" icon={Icon.CheckCircle}>
+                          {checklist.map((item) => (
+                            <Action
+                              key={item.id}
+                              title={item.text}
+                              icon={item.completed ? Icon.Checkmark : Icon.Circle}
+                              onAction={() => handleChecklistScore(task, item)}
+                            />
+                          ))}
+                        </ActionPanel.Submenu>
+                      )}
+                      {checklist.length > 0 && (
+                        <ActionPanel.Submenu title="Edit Item" icon={Icon.Pencil}>
+                          {checklist.map((item) => (
+                            <Action
+                              key={`edit-${item.id}`}
+                              title={item.text}
+                              icon={Icon.Pencil}
+                              onAction={() =>
+                                push(
+                                  <ChecklistForm
+                                    taskId={task.id}
+                                    taskText={task.text}
+                                    existingItemId={item.id}
+                                    existingItemText={item.text}
+                                    onSubmitted={fetchData}
+                                    onUpdate={updateChecklistItem}
+                                  />,
+                                )
+                              }
+                            />
+                          ))}
+                        </ActionPanel.Submenu>
+                      )}
+                      {checklist.length > 0 && (
+                        <ActionPanel.Submenu title="Delete Item" icon={Icon.Trash}>
+                          {checklist.map((item) => (
+                            <Action
+                              key={`del-${item.id}`}
+                              title={item.text}
+                              icon={Icon.Trash}
+                              style={Action.Style.Destructive}
+                              onAction={() => handleChecklistDelete(task, item)}
+                            />
+                          ))}
+                        </ActionPanel.Submenu>
+                      )}
                     </ActionPanel.Section>
                   )}
                   <ActionPanel.Section>

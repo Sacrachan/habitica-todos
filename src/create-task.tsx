@@ -24,6 +24,7 @@ const TYPE_TO_COMMAND: Record<string, string> = {
 export default function Command() {
   const [tags, setTags] = useState<HabiticaTag[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(true);
+  const [type, setType] = useState<string>("todo");
 
   useEffect(() => {
     loadTags();
@@ -57,8 +58,10 @@ export default function Command() {
     if (values.notes?.trim()) body.notes = values.notes.trim();
     if (values.priority) body.priority = parseFloat(values.priority);
 
-    const dueDate = toHabiticaDate(values.date);
-    if (dueDate) body.date = dueDate;
+    if (taskType === "todo") {
+      const dueDate = toHabiticaDate(values.date);
+      if (dueDate) body.date = dueDate;
+    }
 
     if (values.tags?.length > 0) body.tags = values.tags;
 
@@ -97,7 +100,7 @@ export default function Command() {
     >
       <Form.TextField id="text" title="Title" placeholder="What do you need to do?" autoFocus />
 
-      <Form.Dropdown id="type" title="Type" defaultValue="todo">
+      <Form.Dropdown id="type" title="Type" value={type} onChange={setType}>
         <Form.Dropdown.Item value="todo" title="To-Do" />
         <Form.Dropdown.Item value="habit" title="Habit" />
         <Form.Dropdown.Item value="daily" title="Daily" />
@@ -105,12 +108,14 @@ export default function Command() {
 
       <Form.TextArea id="notes" title="Notes" placeholder="Additional details (optional)" />
 
-      <Form.TextArea
-        id="checklist"
-        title="Checklist"
-        placeholder="One sub-task per line (optional)"
-        info="Each line becomes a checklist item. Only added when creating To-Dos or Dailies."
-      />
+      {(type === "todo" || type === "daily") && (
+        <Form.TextArea
+          id="checklist"
+          title="Checklist"
+          placeholder="One sub-task per line (optional)"
+          info="Each line becomes a checklist item."
+        />
+      )}
 
       <Form.Separator />
 
@@ -120,7 +125,7 @@ export default function Command() {
         ))}
       </Form.Dropdown>
 
-      <Form.DatePicker id="date" title="Due Date" type={Form.DatePicker.Type.Date} />
+      {type === "todo" && <Form.DatePicker id="date" title="Due Date" type={Form.DatePicker.Type.Date} />}
 
       <Form.Separator />
 

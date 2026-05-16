@@ -55,6 +55,8 @@ export default function HatchForm({ eggKey, potionKey, eggs, potions, onSubmitte
     >
       {eggKey ? (
         <Form.Description title="Egg" text={eggKey} />
+      ) : (eggs ?? []).length === 0 ? (
+        <Form.Description title="Egg" text="No eggs in inventory" />
       ) : (
         <Form.Dropdown id="egg" title="Egg">
           {(eggs ?? []).map(([k, c]) => (
@@ -64,6 +66,8 @@ export default function HatchForm({ eggKey, potionKey, eggs, potions, onSubmitte
       )}
       {potionKey ? (
         <Form.Description title="Hatching Potion" text={potionKey} />
+      ) : (potions ?? []).length === 0 ? (
+        <Form.Description title="Hatching Potion" text="No hatching potions in inventory" />
       ) : (
         <Form.Dropdown id="potion" title="Hatching Potion">
           {(potions ?? []).map(([k, c]) => (

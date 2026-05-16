@@ -51,6 +51,11 @@ export interface HabiticaUser {
     classSelected?: boolean;
     rebirthEnabled?: boolean;
   };
+  purchased?: {
+    plan?: {
+      mysteryItems?: string[];
+    };
+  };
   party?: {
     quest?: {
       key: string;

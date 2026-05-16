@@ -156,8 +156,18 @@ export default function Command() {
   const visibleCategories = category === "all" ? categories : categories.filter((c) => c.key === category);
   const isEmpty = visibleCategories.every((c) => c.entries.length === 0);
 
+  const pendingMystery = user?.purchased?.plan?.mysteryItems?.length ?? 0;
+
   const baseActions = (
     <>
+      {pendingMystery > 0 && (
+        <Action
+          title={`Open Mystery Item (${pendingMystery} pending)`}
+          icon={Icon.Gift}
+          shortcut={{ modifiers: ["cmd"], key: "m" }}
+          onAction={handleOpenMystery}
+        />
+      )}
       <Action
         title="Refresh"
         icon={Icon.ArrowClockwise}
@@ -244,14 +254,7 @@ export default function Command() {
           </ActionPanel>
         );
       case "special":
-        return (
-          <ActionPanel>
-            {key === "inventory_present" || key === "mysteryItem" ? (
-              <Action title="Open Mystery Item" icon={Icon.Gift} onAction={handleOpenMystery} />
-            ) : null}
-            {baseActions}
-          </ActionPanel>
-        );
+        return <ActionPanel>{baseActions}</ActionPanel>;
       case "pets":
         return (
           <ActionPanel>

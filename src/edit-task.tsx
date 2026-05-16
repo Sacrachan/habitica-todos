@@ -1,7 +1,7 @@
 import { Form, ActionPanel, Action, showToast, Toast, useNavigation } from "@raycast/api";
 import { HabiticaTask, UpdateTaskBody } from "./types";
 import { updateTask } from "./api";
-import { toHabiticaDate } from "./date-utils";
+import { toHabiticaDate, parseHabiticaDate } from "./date-utils";
 import { PRIORITY_OPTIONS } from "./constants";
 
 interface EditTaskFormProps {
@@ -81,7 +81,7 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
           id="date"
           title="Due Date"
           type={Form.DatePicker.Type.Date}
-          defaultValue={task.date ? new Date(task.date) : undefined}
+          defaultValue={parseHabiticaDate(task.date) ?? undefined}
         />
       )}
     </Form>
