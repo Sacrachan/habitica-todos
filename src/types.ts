@@ -37,7 +37,19 @@ export interface HabiticaUser {
     lvl: number;
     gp: number;
     maxHealth?: number;
+    maxMP?: number;
     class?: string;
+    points?: number;
+    str?: number;
+    con?: number;
+    int?: number;
+    per?: number;
+  };
+  /** Death buff. Active when user died and must revive. */
+  needsCron?: boolean;
+  flags?: {
+    classSelected?: boolean;
+    rebirthEnabled?: boolean;
   };
   party?: {
     quest?: {
@@ -80,6 +92,12 @@ export interface HabiticaUser {
   };
 }
 
+export interface HabiticaChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
 export interface HabiticaTask {
   id: string;
   text: string;
@@ -96,6 +114,7 @@ export interface HabiticaTask {
   streak?: number;
   up?: boolean;
   down?: boolean;
+  checklist?: HabiticaChecklistItem[];
 }
 
 export interface HabiticaTag {
@@ -110,6 +129,7 @@ export interface CreateTaskBody {
   priority?: number;
   date?: string;
   tags?: string[];
+  checklist?: { text: string; completed?: boolean }[];
 }
 
 export interface UpdateTaskBody {

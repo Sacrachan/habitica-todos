@@ -1,5 +1,10 @@
 # Habitica Todos Changelog
 
+## [Add checklists, item usage, and skills] - {PR_MERGE_DATE}
+
+- Add checklist (sub-task) support to To-Dos and Dailies — add, score, edit, delete items
+- Include checklist progress accessory and detail section in the task list
+
 ## [Add more commands and improve UI] - {PR_MERGE_DATE}
 
 - Add "View Dailies" command

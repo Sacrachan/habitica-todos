@@ -115,7 +115,9 @@ export async function deleteTask(taskId: string): Promise<void> {
 
 export async function getUser(): Promise<HabiticaUser> {
   if (isFresh(cache.user)) return cache.user.data;
-  const data = await habiticaFetch<HabiticaUser>("/api/v3/user?userFields=stats,party,items,profile,preferences");
+  const data = await habiticaFetch<HabiticaUser>(
+    "/api/v3/user?userFields=stats,party,items,profile,preferences,flags,needsCron",
+  );
   cache.user = { data, expiresAt: Date.now() + USER_TTL_MS };
   return data;
 }
@@ -156,4 +158,104 @@ export async function buyHealthPotion(): Promise<void> {
 export async function buyArmoire(): Promise<void> {
   await habiticaFetch("/api/v3/user/buy-armoire", { method: "POST" });
   invalidateUserCache();
+}
+
+// ---------------------------------------------------------------------------
+// Checklist
+// ---------------------------------------------------------------------------
+
+export async function addChecklistItem(taskId: string, text: string): Promise<void> {
+  await habiticaFetch(`/api/v3/tasks/${taskId}/checklist`, {
+    method: "POST",
+    body: JSON.stringify({ text }),
+  });
+  invalidateTasksCache();
+}
+
+export async function scoreChecklistItem(taskId: string, itemId: string): Promise<void> {
+  await habiticaFetch(`/api/v3/tasks/${taskId}/checklist/${itemId}/score`, { method: "POST" });
+  invalidateTasksCache();
+}
+
+export async function updateChecklistItem(taskId: string, itemId: string, text: string): Promise<void> {
+  await habiticaFetch(`/api/v3/tasks/${taskId}/checklist/${itemId}`, {
+    method: "PUT",
+    body: JSON.stringify({ text }),
+  });
+  invalidateTasksCache();
+}
+
+export async function deleteChecklistItem(taskId: string, itemId: string): Promise<void> {
+  await habiticaFetch(`/api/v3/tasks/${taskId}/checklist/${itemId}`, { method: "DELETE" });
+  invalidateTasksCache();
+}
+
+// ---------------------------------------------------------------------------
+// Inventory actions
+// ---------------------------------------------------------------------------
+
+export async function hatchPet(eggKey: string, potionKey: string): Promise<void> {
+  await habiticaFetch(`/api/v3/user/hatch/${eggKey}/${potionKey}`, { method: "POST" });
+  invalidateUserCache();
+}
+
+export async function feedPet(petKey: string, foodKey: string, amount = 1): Promise<void> {
+  await habiticaFetch(`/api/v3/user/feed/${petKey}/${foodKey}?amount=${amount}`, { method: "POST" });
+  invalidateUserCache();
+}
+
+export async function equipItem(type: "mount" | "pet" | "equipped" | "costume", key: string): Promise<void> {
+  await habiticaFetch(`/api/v3/user/equip/${type}/${key}`, { method: "POST" });
+  invalidateUserCache();
+}
+
+export async function sellItem(type: "eggs" | "hatchingPotions" | "food", key: string, amount = 1): Promise<void> {
+  await habiticaFetch(`/api/v3/user/sell/${type}/${key}?amount=${amount}`, { method: "POST" });
+  invalidateUserCache();
+}
+
+export async function openMysteryItem(): Promise<void> {
+  await habiticaFetch("/api/v3/user/open-mystery-item", { method: "POST" });
+  invalidateUserCache();
+}
+
+// ---------------------------------------------------------------------------
+// Class / skills / stats
+// ---------------------------------------------------------------------------
+
+export async function castSpell(spellId: string, targetId?: string): Promise<void> {
+  const query = targetId ? `?targetId=${encodeURIComponent(targetId)}` : "";
+  await habiticaFetch(`/api/v3/user/class/cast/${spellId}${query}`, { method: "POST" });
+  invalidateUserCache();
+  invalidateTasksCache();
+}
+
+export async function allocateStat(stat: "str" | "con" | "int" | "per"): Promise<void> {
+  await habiticaFetch(`/api/v3/user/allocate?stat=${stat}`, { method: "POST" });
+  invalidateUserCache();
+}
+
+export async function allocateNow(): Promise<void> {
+  await habiticaFetch("/api/v3/user/allocate-now", { method: "POST" });
+  invalidateUserCache();
+}
+
+// ---------------------------------------------------------------------------
+// User state
+// ---------------------------------------------------------------------------
+
+export async function toggleSleep(): Promise<void> {
+  await habiticaFetch("/api/v3/user/sleep", { method: "POST" });
+  invalidateUserCache();
+}
+
+export async function reviveUser(): Promise<void> {
+  await habiticaFetch("/api/v3/user/revive", { method: "POST" });
+  invalidateUserCache();
+}
+
+export async function runCron(): Promise<void> {
+  await habiticaFetch("/api/v3/cron", { method: "POST" });
+  invalidateUserCache();
+  invalidateTasksCache();
 }

@@ -11,10 +11,19 @@ import {
   useNavigation,
 } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getTasks, getTags, scoreTask, deleteTask } from "../api";
+import {
+  getTasks,
+  getTags,
+  scoreTask,
+  deleteTask,
+  scoreChecklistItem,
+  deleteChecklistItem,
+  addChecklistItem,
+} from "../api";
 import { HabiticaTask, HabiticaTag } from "../types";
 import { PRIORITY_LABELS, TAG_FILTER_ALL } from "../constants";
 import EditTaskForm from "../edit-task";
+import ChecklistForm from "../checklist-form";
 
 interface TaskListProps {
   type: "todos" | "dailys" | "habits" | "rewards";
@@ -116,6 +125,34 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     }
   }
 
+  async function handleChecklistScore(task: HabiticaTask, item: { id: string; text: string }) {
+    try {
+      await showToast({ style: Toast.Style.Animated, title: "Updating checklist…" });
+      await scoreChecklistItem(task.id, item.id);
+      await showToast({ style: Toast.Style.Success, title: "Checklist updated" });
+      await fetchData();
+    } catch (error) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed", message: String(error) });
+    }
+  }
+
+  async function handleChecklistDelete(task: HabiticaTask, item: { id: string; text: string }) {
+    const confirmed = await confirmAlert({
+      title: "Delete Checklist Item",
+      message: `Remove "${item.text}"?`,
+      primaryAction: { title: "Delete", style: Alert.ActionStyle.Destructive },
+    });
+    if (!confirmed) return;
+    try {
+      await showToast({ style: Toast.Style.Animated, title: "Removing…" });
+      await deleteChecklistItem(task.id, item.id);
+      await showToast({ style: Toast.Style.Success, title: "Removed" });
+      await fetchData();
+    } catch (error) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed", message: String(error) });
+    }
+  }
+
   async function handleDelete(task: HabiticaTask) {
     const confirmed = await confirmAlert({
       title: "Delete Task",
@@ -165,14 +202,33 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
           const taskTagNames = task.tags.map((tid) => tagNameMap.get(tid)).filter(Boolean) as string[];
           const difficultyLabel = PRIORITY_LABELS[task.priority] ?? "Unknown";
 
-          const detailMarkdown = task.notes || "*No description*";
+          const checklist = task.checklist ?? [];
+          const checklistDone = checklist.filter((c) => c.completed).length;
+          const checklistMarkdown =
+            checklist.length > 0
+              ? "\n\n### Checklist\n\n" +
+                checklist.map((c) => `- ${c.completed ? "[x]" : "[ ]"} ${c.text}`).join("\n")
+              : "";
+          const detailMarkdown = (task.notes || "*No description*") + checklistMarkdown;
+          const accessories: { text?: string; icon?: { source: Icon; tintColor?: Color }; tooltip?: string }[] = [];
+          if (checklist.length > 0) {
+            accessories.push({
+              icon: {
+                source: Icon.BulletPoints,
+                tintColor: checklistDone === checklist.length ? Color.Green : Color.SecondaryText,
+              },
+              text: `${checklistDone}/${checklist.length}`,
+              tooltip: "Checklist progress",
+            });
+          }
+          if (formattedDate) accessories.push({ text: formattedDate });
 
           return (
             <List.Item
               key={task.id}
               icon={icon}
               title={task.text}
-              accessories={formattedDate ? [{ text: formattedDate }] : undefined}
+              accessories={accessories.length > 0 ? accessories : undefined}
               detail={
                 <List.Item.Detail
                   markdown={detailMarkdown}
@@ -196,6 +252,16 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                         <>
                           <List.Item.Detail.Metadata.Separator />
                           <List.Item.Detail.Metadata.Label title="Due Date" text={formattedDate} />
+                        </>
+                      )}
+                      {checklist.length > 0 && (
+                        <>
+                          <List.Item.Detail.Metadata.Separator />
+                          <List.Item.Detail.Metadata.Label
+                            title="Checklist"
+                            text={`${checklistDone} / ${checklist.length} done`}
+                            icon={Icon.BulletPoints}
+                          />
                         </>
                       )}
                       <List.Item.Detail.Metadata.Separator />
@@ -261,6 +327,43 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                       onAction={() => handleDelete(task)}
                     />
                   </ActionPanel.Section>
+                  {(task.type === "todo" || task.type === "daily") && (
+                    <ActionPanel.Section title="Checklist">
+                      <Action
+                        title="Add Checklist Item"
+                        icon={Icon.PlusCircle}
+                        shortcut={{ modifiers: ["cmd"], key: "k" }}
+                        onAction={() =>
+                          push(
+                            <ChecklistForm
+                              taskId={task.id}
+                              taskText={task.text}
+                              onSubmitted={fetchData}
+                              onAdd={addChecklistItem}
+                            />,
+                          )
+                        }
+                      />
+                      {checklist.map((item) => (
+                        <Action
+                          key={item.id}
+                          title={`${item.completed ? "Uncheck" : "Check"}: ${item.text}`}
+                          icon={item.completed ? Icon.Circle : Icon.CheckCircle}
+                          onAction={() => handleChecklistScore(task, item)}
+                        />
+                      ))}
+                      {checklist.length > 0 &&
+                        checklist.map((item) => (
+                          <Action
+                            key={`del-${item.id}`}
+                            title={`Delete: ${item.text}`}
+                            icon={Icon.Trash}
+                            style={Action.Style.Destructive}
+                            onAction={() => handleChecklistDelete(task, item)}
+                          />
+                        ))}
+                    </ActionPanel.Section>
+                  )}
                   <ActionPanel.Section>
                     <Action
                       title="Refresh"

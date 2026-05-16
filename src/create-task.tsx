@@ -12,6 +12,7 @@ interface FormValues {
   priority: string;
   date: Date | null;
   tags: string[];
+  checklist: string;
 }
 
 const TYPE_TO_COMMAND: Record<string, string> = {
@@ -61,6 +62,15 @@ export default function Command() {
 
     if (values.tags?.length > 0) body.tags = values.tags;
 
+    if (values.checklist?.trim()) {
+      const items = values.checklist
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .map((text) => ({ text }));
+      if (items.length > 0) body.checklist = items;
+    }
+
     try {
       await showToast({ style: Toast.Style.Animated, title: "Creating task…" });
       await createTask(body);
@@ -94,6 +104,13 @@ export default function Command() {
       </Form.Dropdown>
 
       <Form.TextArea id="notes" title="Notes" placeholder="Additional details (optional)" />
+
+      <Form.TextArea
+        id="checklist"
+        title="Checklist"
+        placeholder="One sub-task per line (optional)"
+        info="Each line becomes a checklist item. Only added when creating To-Dos or Dailies."
+      />
 
       <Form.Separator />
 
