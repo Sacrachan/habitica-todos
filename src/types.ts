@@ -78,8 +78,10 @@ export interface HabiticaUser {
       costume: Record<string, string>;
       owned: Record<string, boolean>;
     };
+    /** Pets store feed progress (5–50); -1 indicates a released pet. */
     pets: Record<string, number>;
-    mounts: Record<string, number>;
+    /** Mounts store boolean ownership; false indicates a released mount. */
+    mounts: Record<string, boolean>;
     currentPet?: string;
     currentMount?: string;
   };

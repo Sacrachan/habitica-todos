@@ -104,9 +104,12 @@ export default function Command() {
   const petEntries: InventoryEntry[] = Object.entries(ownedPets)
     .filter(([, count]) => count > 0)
     .sort(([a], [b]) => a.localeCompare(b)) as InventoryEntry[];
+  // Mounts are stored as booleans (true = owned). Convert to 1/0 so the inventory grid
+  // can share the same `InventoryEntry` shape (count is purely informational for mounts).
   const mountEntries: InventoryEntry[] = Object.entries(ownedMounts)
-    .filter(([, count]) => count > 0)
-    .sort(([a], [b]) => a.localeCompare(b)) as InventoryEntry[];
+    .filter(([, owned]) => owned === true)
+    .map(([key]) => [key, 1] as InventoryEntry)
+    .sort((a, b) => a[0].localeCompare(b[0]));
 
   const categories: InventoryCategory[] = [
     {
