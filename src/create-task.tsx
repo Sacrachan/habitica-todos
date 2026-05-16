@@ -1,10 +1,9 @@
 import { Form, ActionPanel, Action, showToast, Toast, launchCommand, LaunchType } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { createTask, getTags } from "./api";
-import { HabiticaTag, CreateTaskBody } from "./types";
+import { HabiticaTag, CreateTaskBody, TaskAttribute } from "./types";
 import { toHabiticaDate } from "./date-utils";
 import { PRIORITY_OPTIONS, ATTRIBUTE_OPTIONS } from "./constants";
-import { TaskAttribute } from "./types";
 
 interface FormValues {
   text: string;

@@ -132,11 +132,6 @@ export async function removeTagFromTask(taskId: string, tagId: string): Promise<
   invalidateTasksCache();
 }
 
-export async function moveTask(taskId: string, position: number): Promise<void> {
-  await habiticaFetch(`/api/v3/tasks/${taskId}/move/to/${position}`, { method: "POST" });
-  invalidateTasksCache();
-}
-
 export async function getUser(): Promise<HabiticaUser> {
   if (isFresh(cache.user)) return cache.user.data;
   const data = await habiticaFetch<HabiticaUser>(
@@ -276,10 +271,4 @@ export async function toggleSleep(): Promise<void> {
 export async function reviveUser(): Promise<void> {
   await habiticaFetch("/api/v3/user/revive", { method: "POST" });
   invalidateUserCache();
-}
-
-export async function runCron(): Promise<void> {
-  await habiticaFetch("/api/v3/cron", { method: "POST" });
-  invalidateUserCache();
-  invalidateTasksCache();
 }
