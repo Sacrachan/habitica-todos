@@ -1,8 +1,19 @@
 import { ActionPanel, Action, Icon, Detail, showToast, Toast, Color, confirmAlert, Alert } from "@raycast/api";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { getUser, forceCompleteQuest, acceptQuest, abortQuest } from "./api";
+import {
+  getUser,
+  forceCompleteQuest,
+  acceptQuest,
+  abortQuest,
+  castSpell,
+  allocateStat,
+  allocateNow,
+  toggleSleep,
+  reviveUser,
+} from "./api";
 import { getAvatarSvg } from "./avatar";
 import { HabiticaUser } from "./types";
+import { SKILLS_BY_CLASS, STAT_LABELS } from "./constants";
 
 const AVATAR_PLACEHOLDER = `data:image/svg+xml;base64,${Buffer.from(
   `<svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg"><rect width="140" height="140" rx="12" fill="#2d2c2a"/><circle cx="70" cy="52" r="22" fill="#444"/><ellipse cx="70" cy="110" rx="34" ry="24" fill="#444"/></svg>`,
@@ -42,6 +53,13 @@ export default function Command() {
 
   const stats = user?.stats;
   const quest = user?.party?.quest;
+  const userClass = stats?.class;
+  const userLevel = stats?.lvl ?? 0;
+  const userMp = stats?.mp ?? 0;
+  const skills = userClass ? (SKILLS_BY_CLASS[userClass] ?? []) : [];
+  const unallocatedPoints = stats?.points ?? 0;
+  const isSleeping = user?.preferences?.sleep ?? false;
+  const isDead = stats ? stats.hp <= 0 : false;
 
   let questMarkdown = "### No Active Quest\n\nYou are not currently on a quest.";
   if (quest?.key) {
@@ -72,7 +90,7 @@ export default function Command() {
           />
           <Detail.Metadata.Label
             title="Mana"
-            text={(stats?.mp ?? 0).toFixed(1)}
+            text={`${(stats?.mp ?? 0).toFixed(1)}${stats?.maxMP ? ` / ${stats.maxMP}` : ""}`}
             icon={{ source: Icon.Star, tintColor: Color.Blue }}
           />
           <Detail.Metadata.Label
@@ -85,6 +103,27 @@ export default function Command() {
             text={(stats?.gp ?? 0).toFixed(2)}
             icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
           />
+          {userClass && (
+            <Detail.Metadata.Label
+              title="Class"
+              text={userClass.charAt(0).toUpperCase() + userClass.slice(1)}
+              icon={Icon.Person}
+            />
+          )}
+          {unallocatedPoints > 0 && (
+            <Detail.Metadata.Label
+              title="Stat Points"
+              text={`${unallocatedPoints} unspent`}
+              icon={{ source: Icon.Plus, tintColor: Color.Green }}
+            />
+          )}
+          {isSleeping && (
+            <Detail.Metadata.Label
+              title="Resting"
+              text="At the Tavern"
+              icon={{ source: Icon.Moon, tintColor: Color.Blue }}
+            />
+          )}
           {quest?.key && (
             <Detail.Metadata.TagList title="Quest Status">
               <Detail.Metadata.TagList.Item
@@ -104,7 +143,48 @@ export default function Command() {
               shortcut={{ modifiers: ["cmd"], key: "r" }}
               onAction={fetchData}
             />
+            {isDead && (
+              <Action
+                title="Revive Character"
+                icon={{ source: Icon.Heart, tintColor: Color.Red }}
+                onAction={handleRevive}
+              />
+            )}
+            <Action
+              title={isSleeping ? "Wake Up (Leave Tavern)" : "Rest in Tavern"}
+              icon={isSleeping ? Icon.Sun : Icon.Moon}
+              shortcut={{ modifiers: ["cmd", "shift"], key: "s" }}
+              onAction={handleToggleSleep}
+            />
           </ActionPanel.Section>
+          {userLevel >= 10 && skills.length > 0 && (
+            <ActionPanel.Section title="Skills">
+              {skills.map((skill) => {
+                const canCast = userLevel >= skill.level && userMp >= skill.mana;
+                return (
+                  <Action
+                    key={skill.key}
+                    title={`${skill.name} (${skill.mana} MP)`}
+                    icon={{ source: Icon.Wand, tintColor: canCast ? Color.Blue : Color.SecondaryText }}
+                    onAction={() => handleCastSkill(skill.key, skill.name, skill.mana, skill.level)}
+                  />
+                );
+              })}
+            </ActionPanel.Section>
+          )}
+          {unallocatedPoints > 0 && (
+            <ActionPanel.Section title={`Allocate Stat Point (${unallocatedPoints} left)`}>
+              {(["str", "con", "int", "per"] as const).map((stat) => (
+                <Action
+                  key={stat}
+                  title={`+1 ${STAT_LABELS[stat]}`}
+                  icon={Icon.Plus}
+                  onAction={() => handleAllocate(stat)}
+                />
+              ))}
+              <Action title="Auto-Allocate All" icon={Icon.Stars} onAction={handleAllocateNow} />
+            </ActionPanel.Section>
+          )}
           {quest?.key && (
             <ActionPanel.Section title="Quest Actions">
               {!quest.active && (
@@ -136,6 +216,92 @@ export default function Command() {
       }
     />
   );
+
+  async function handleCastSkill(spellId: string, name: string, mana: number, level: number) {
+    if (userLevel < level) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Level too low",
+        message: `${name} unlocks at level ${level}`,
+      });
+      return;
+    }
+    if (userMp < mana) {
+      await showToast({
+        style: Toast.Style.Failure,
+        title: "Not enough mana",
+        message: `Needs ${mana} MP — have ${userMp.toFixed(1)}`,
+      });
+      return;
+    }
+    try {
+      await showToast({ style: Toast.Style.Animated, title: `Casting ${name}…` });
+      await castSpell(spellId);
+      await showToast({ style: Toast.Style.Success, title: `Cast ${name}` });
+      await fetchData();
+    } catch (error) {
+      await showToast({ style: Toast.Style.Failure, title: "Cast failed", message: String(error) });
+    }
+  }
+
+  async function handleAllocate(stat: "str" | "con" | "int" | "per") {
+    try {
+      await showToast({ style: Toast.Style.Animated, title: `Allocating to ${STAT_LABELS[stat]}…` });
+      await allocateStat(stat);
+      await showToast({ style: Toast.Style.Success, title: "Stat allocated" });
+      await fetchData();
+    } catch (error) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed", message: String(error) });
+    }
+  }
+
+  async function handleAllocateNow() {
+    const confirmed = await confirmAlert({
+      title: "Auto-Allocate All Points",
+      message: "Spend all unallocated stat points using your chosen automatic strategy?",
+      primaryAction: { title: "Allocate" },
+    });
+    if (!confirmed) return;
+    try {
+      await showToast({ style: Toast.Style.Animated, title: "Allocating…" });
+      await allocateNow();
+      await showToast({ style: Toast.Style.Success, title: "Stats allocated" });
+      await fetchData();
+    } catch (error) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed", message: String(error) });
+    }
+  }
+
+  async function handleToggleSleep() {
+    try {
+      await showToast({ style: Toast.Style.Animated, title: "Toggling tavern…" });
+      await toggleSleep();
+      await showToast({
+        style: Toast.Style.Success,
+        title: isSleeping ? "Woke up" : "Resting in the tavern",
+      });
+      await fetchData();
+    } catch (error) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed", message: String(error) });
+    }
+  }
+
+  async function handleRevive() {
+    const confirmed = await confirmAlert({
+      title: "Revive Character",
+      message: "Revive your character? You lose a level and a piece of equipment.",
+      primaryAction: { title: "Revive", style: Alert.ActionStyle.Destructive },
+    });
+    if (!confirmed) return;
+    try {
+      await showToast({ style: Toast.Style.Animated, title: "Reviving…" });
+      await reviveUser();
+      await showToast({ style: Toast.Style.Success, title: "Revived" });
+      await fetchData();
+    } catch (error) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed", message: String(error) });
+    }
+  }
 
   async function handleQuestAction(action: "accept" | "abort" | "force-complete") {
     if (action === "abort") {

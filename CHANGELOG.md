@@ -6,6 +6,8 @@
 - Include checklist progress accessory and detail section in the task list
 - Make inventory items usable: hatch eggs with potions, feed pets, equip pets/mounts, sell eggs/potions/food, open mystery items
 - Add Pets and Mounts categories to the inventory grid with equip/unequip actions
+- Add class skills to View Profile (cast with mana/level checks)
+- Add tavern rest/wake toggle, revive when dead, and stat point allocation to View Profile
 
 ## [Add more commands and improve UI] - {PR_MERGE_DATE}
 
