@@ -235,8 +235,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
           const checklistDone = checklist.filter((c) => c.completed).length;
           const checklistMarkdown =
             checklist.length > 0
-              ? "\n\n### Checklist\n\n" +
-                checklist.map((c) => `- ${c.completed ? "[x]" : "[ ]"} ${c.text}`).join("\n")
+              ? "\n\n### Checklist\n\n" + checklist.map((c) => `- ${c.completed ? "[x]" : "[ ]"} ${c.text}`).join("\n")
               : "";
           const detailMarkdown = (task.notes || "*No description*") + checklistMarkdown;
           const accessories: { text?: string; icon?: { source: Icon; tintColor?: Color }; tooltip?: string }[] = [];

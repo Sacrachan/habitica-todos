@@ -35,20 +35,47 @@ export interface SkillDefinition {
 
 export const SKILLS_BY_CLASS: Record<string, SkillDefinition[]> = {
   warrior: [
-    { key: "smash", name: "Brutal Smash", description: "Deals damage to a task & boss.", mana: 10, level: 11, targetsTask: true },
+    {
+      key: "smash",
+      name: "Brutal Smash",
+      description: "Deals damage to a task & boss.",
+      mana: 10,
+      level: 11,
+      targetsTask: true,
+    },
     { key: "defensiveStance", name: "Defensive Stance", description: "Reduces incoming damage.", mana: 25, level: 12 },
-    { key: "valorousPresence", name: "Valorous Presence", description: "Boosts STR for the party.", mana: 20, level: 13 },
+    {
+      key: "valorousPresence",
+      name: "Valorous Presence",
+      description: "Boosts STR for the party.",
+      mana: 20,
+      level: 13,
+    },
     { key: "intimidate", name: "Intimidating Gaze", description: "Boosts CON for the party.", mana: 15, level: 14 },
   ],
   wizard: [
-    { key: "fireball", name: "Burst of Flames", description: "Deals damage to a task & boss.", mana: 10, level: 11, targetsTask: true },
+    {
+      key: "fireball",
+      name: "Burst of Flames",
+      description: "Deals damage to a task & boss.",
+      mana: 10,
+      level: 11,
+      targetsTask: true,
+    },
     { key: "mpheal", name: "Ethereal Surge", description: "Restores mana for the party.", mana: 30, level: 12 },
     { key: "earth", name: "Earthquake", description: "Boosts INT for the party.", mana: 35, level: 13 },
     { key: "frost", name: "Chilling Frost", description: "Removes daily streaks for re-rolling.", mana: 40, level: 14 },
   ],
   rogue: [
     { key: "pickPocket", name: "Pickpocket", description: "Steals gold.", mana: 10, level: 11, targetsTask: true },
-    { key: "backStab", name: "Backstab", description: "Deals damage & gives EXP.", mana: 15, level: 12, targetsTask: true },
+    {
+      key: "backStab",
+      name: "Backstab",
+      description: "Deals damage & gives EXP.",
+      mana: 15,
+      level: 12,
+      targetsTask: true,
+    },
     { key: "toolsOfTrade", name: "Tools of the Trade", description: "Boosts PER for the party.", mana: 25, level: 13 },
     { key: "stealth", name: "Stealth", description: "Avoid Daily damage tonight.", mana: 45, level: 14 },
   ],

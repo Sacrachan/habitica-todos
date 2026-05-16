@@ -27,9 +27,7 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
   useEffect(() => {
     getTags()
       .then(setTags)
-      .catch((error) =>
-        showToast({ style: Toast.Style.Failure, title: "Failed to load tags", message: String(error) }),
-      )
+      .catch((error) => showToast({ style: Toast.Style.Failure, title: "Failed to load tags", message: String(error) }))
       .finally(() => setIsLoadingTags(false));
   }, []);
 

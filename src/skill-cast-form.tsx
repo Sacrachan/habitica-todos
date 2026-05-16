@@ -47,11 +47,7 @@ export default function SkillCastForm({ spellId, spellName, taskTypes, onCast }:
   }
 
   return (
-    <List
-      isLoading={isLoading}
-      navigationTitle={`Cast ${spellName} On…`}
-      searchBarPlaceholder="Search tasks…"
-    >
+    <List isLoading={isLoading} navigationTitle={`Cast ${spellName} On…`} searchBarPlaceholder="Search tasks…">
       {tasks.length === 0 && !isLoading && (
         <List.EmptyView title="No targets available" description="Add a task first." />
       )}

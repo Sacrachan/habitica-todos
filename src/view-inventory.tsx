@@ -193,15 +193,7 @@ export default function Command() {
             <Action
               title="Hatch Pet"
               icon={Icon.NewDocument}
-              onAction={() =>
-                push(
-                  <HatchForm
-                    eggKey={key}
-                    potions={potionEntries}
-                    onSubmitted={fetchData}
-                  />,
-                )
-              }
+              onAction={() => push(<HatchForm eggKey={key} potions={potionEntries} onSubmitted={fetchData} />)}
             />
             <Action
               title="Sell Egg"
@@ -218,15 +210,7 @@ export default function Command() {
             <Action
               title="Hatch Egg"
               icon={Icon.NewDocument}
-              onAction={() =>
-                push(
-                  <HatchForm
-                    potionKey={key}
-                    eggs={eggEntries}
-                    onSubmitted={fetchData}
-                  />,
-                )
-              }
+              onAction={() => push(<HatchForm potionKey={key} eggs={eggEntries} onSubmitted={fetchData} />)}
             />
             <Action
               title="Sell Potion"
@@ -243,9 +227,7 @@ export default function Command() {
             <Action
               title="Feed a Pet"
               icon={Icon.Heart}
-              onAction={() =>
-                push(<FeedForm foodKey={key} pets={petEntries} onSubmitted={fetchData} />)
-              }
+              onAction={() => push(<FeedForm foodKey={key} pets={petEntries} onSubmitted={fetchData} />)}
             />
             <Action
               title="Sell Food"
@@ -312,8 +294,7 @@ export default function Command() {
             <Grid.Section key={c.key} title={`${c.label} (${c.entries.length})`}>
               {c.entries.map(([key, count]) => {
                 const equippedSuffix =
-                  (c.key === "pets" && items?.currentPet === key) ||
-                  (c.key === "mounts" && items?.currentMount === key)
+                  (c.key === "pets" && items?.currentPet === key) || (c.key === "mounts" && items?.currentMount === key)
                     ? " (equipped)"
                     : "";
                 return (
