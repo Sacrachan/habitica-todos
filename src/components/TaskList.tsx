@@ -20,6 +20,7 @@ import {
   deleteChecklistItem,
   addChecklistItem,
   updateChecklistItem,
+  clearCompletedTodos,
 } from "../api";
 import { HabiticaTask, HabiticaTag } from "../types";
 import { PRIORITY_LABELS, TAG_FILTER_ALL } from "../constants";
@@ -155,6 +156,23 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
       await showToast({ style: Toast.Style.Animated, title: "Removing…" });
       await deleteChecklistItem(task.id, item.id);
       await showToast({ style: Toast.Style.Success, title: "Removed" });
+      await fetchData();
+    } catch (error) {
+      await showToast({ style: Toast.Style.Failure, title: "Failed", message: String(error) });
+    }
+  }
+
+  async function handleClearCompleted() {
+    const confirmed = await confirmAlert({
+      title: "Clear Completed To-Dos",
+      message: "Permanently delete all completed To-Dos? This cannot be undone.",
+      primaryAction: { title: "Clear", style: Alert.ActionStyle.Destructive },
+    });
+    if (!confirmed) return;
+    try {
+      await showToast({ style: Toast.Style.Animated, title: "Clearing…" });
+      await clearCompletedTodos();
+      await showToast({ style: Toast.Style.Success, title: "Cleared" });
       await fetchData();
     } catch (error) {
       await showToast({ style: Toast.Style.Failure, title: "Failed", message: String(error) });
@@ -403,6 +421,15 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                     </ActionPanel.Section>
                   )}
                   <ActionPanel.Section>
+                    {type === "todos" && tasks.some((t) => t.completed) && (
+                      <Action
+                        title="Clear Completed To-Dos"
+                        icon={Icon.Eraser}
+                        style={Action.Style.Destructive}
+                        shortcut={{ modifiers: ["cmd", "shift"], key: "delete" }}
+                        onAction={handleClearCompleted}
+                      />
+                    )}
                     <Action
                       title="Refresh"
                       icon={Icon.ArrowClockwise}

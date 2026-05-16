@@ -113,6 +113,16 @@ export async function deleteTask(taskId: string): Promise<void> {
   invalidateTagsCache();
 }
 
+export async function clearCompletedTodos(): Promise<void> {
+  await habiticaFetch("/api/v3/tasks/clearCompletedTodos", { method: "POST" });
+  invalidateTasksCache();
+}
+
+export async function moveTask(taskId: string, position: number): Promise<void> {
+  await habiticaFetch(`/api/v3/tasks/${taskId}/move/to/${position}`, { method: "POST" });
+  invalidateTasksCache();
+}
+
 export async function getUser(): Promise<HabiticaUser> {
   if (isFresh(cache.user)) return cache.user.data;
   const data = await habiticaFetch<HabiticaUser>(
