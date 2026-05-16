@@ -299,6 +299,11 @@ export default function Command() {
                       shortcut={{ modifiers: ["cmd"], key: "r" }}
                       onAction={fetchData}
                     />
+                    <Action.OpenInBrowser
+                      title="Open Habitica Market"
+                      url="https://habitica.com/shops/market"
+                      shortcut={{ modifiers: ["cmd"], key: "o" }}
+                    />
                   </ActionPanel>
                 }
               />
@@ -324,11 +329,16 @@ export default function Command() {
                     <ActionPanel>
                       <Action title="Buy Gear" icon={Icon.Cart} onAction={() => handleBuy(item)} />
                       <Action
-                      title="Refresh"
-                      icon={Icon.ArrowClockwise}
-                      shortcut={{ modifiers: ["cmd"], key: "r" }}
-                      onAction={fetchData}
-                    />
+                        title="Refresh"
+                        icon={Icon.ArrowClockwise}
+                        shortcut={{ modifiers: ["cmd"], key: "r" }}
+                        onAction={fetchData}
+                      />
+                      <Action.OpenInBrowser
+                        title="Open Habitica Equipment"
+                        url="https://habitica.com/shops/market"
+                        shortcut={{ modifiers: ["cmd"], key: "o" }}
+                      />
                     </ActionPanel>
                   }
                 />
@@ -356,6 +366,11 @@ export default function Command() {
                       icon={Icon.ArrowClockwise}
                       shortcut={{ modifiers: ["cmd"], key: "r" }}
                       onAction={fetchData}
+                    />
+                    <Action.OpenInBrowser
+                      title="Open Habitica"
+                      url="https://habitica.com/"
+                      shortcut={{ modifiers: ["cmd"], key: "o" }}
                     />
                   </ActionPanel>
                 }

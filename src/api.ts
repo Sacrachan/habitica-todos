@@ -95,7 +95,6 @@ export async function getTags(): Promise<HabiticaTag[]> {
 export async function scoreTask(taskId: string, direction: "up" | "down"): Promise<void> {
   await habiticaFetch(`/api/v3/tasks/${taskId}/score/${direction}`, { method: "POST" });
   invalidateTasksCache();
-  invalidateTagsCache();
   invalidateUserCache();
 }
 
@@ -105,20 +104,17 @@ export async function updateTask(taskId: string, body: UpdateTaskBody): Promise<
     body: JSON.stringify(body),
   });
   invalidateTasksCache();
-  invalidateTagsCache();
   return result;
 }
 
 export async function createTask(body: CreateTaskBody): Promise<void> {
   await habiticaFetch("/api/v3/tasks/user", { method: "POST", body: JSON.stringify(body) });
   invalidateTasksCache();
-  invalidateTagsCache();
 }
 
 export async function deleteTask(taskId: string): Promise<void> {
   await habiticaFetch(`/api/v3/tasks/${taskId}`, { method: "DELETE" });
   invalidateTasksCache();
-  invalidateTagsCache();
 }
 
 export async function clearCompletedTodos(): Promise<void> {
