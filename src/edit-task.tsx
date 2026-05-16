@@ -1,6 +1,7 @@
 import { Form, ActionPanel, Action, showToast, Toast, useNavigation } from "@raycast/api";
-import { HabiticaTask, UpdateTaskBody } from "./types";
-import { updateTask } from "./api";
+import { useEffect, useState } from "react";
+import { HabiticaTask, HabiticaTag, UpdateTaskBody } from "./types";
+import { updateTask, getTags, addTagToTask, removeTagFromTask } from "./api";
 import { toHabiticaDate, parseHabiticaDate } from "./date-utils";
 import { PRIORITY_OPTIONS } from "./constants";
 
@@ -14,10 +15,22 @@ interface FormValues {
   notes: string;
   priority: string;
   date: Date | null;
+  tags: string[];
 }
 
 export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
   const { pop } = useNavigation();
+  const [tags, setTags] = useState<HabiticaTag[]>([]);
+  const [isLoadingTags, setIsLoadingTags] = useState(true);
+
+  useEffect(() => {
+    getTags()
+      .then(setTags)
+      .catch((error) =>
+        showToast({ style: Toast.Style.Failure, title: "Failed to load tags", message: String(error) }),
+      )
+      .finally(() => setIsLoadingTags(false));
+  }, []);
 
   async function handleSubmit(values: FormValues) {
     if (!values.text.trim()) {
@@ -29,13 +42,11 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
 
     if (values.priority) body.priority = parseFloat(values.priority);
 
-    // Only apply date changes for task types that expose the DatePicker
     if (task.type === "todo") {
       const dueDate = toHabiticaDate(values.date);
       if (dueDate) {
         body.date = dueDate;
       } else if (task.date) {
-        // Explicitly clear the date if the user removed it
         body.date = "";
       }
     }
@@ -43,6 +54,16 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
     try {
       await showToast({ style: Toast.Style.Animated, title: "Updating task…" });
       await updateTask(task.id, body);
+
+      const desired = new Set(values.tags ?? []);
+      const current = new Set(task.tags ?? []);
+      const toAdd = [...desired].filter((id) => !current.has(id));
+      const toRemove = [...current].filter((id) => !desired.has(id));
+      await Promise.all([
+        ...toAdd.map((id) => addTagToTask(task.id, id)),
+        ...toRemove.map((id) => removeTagFromTask(task.id, id)),
+      ]);
+
       await showToast({ style: Toast.Style.Success, title: "Task updated!" });
       onUpdated();
       pop();
@@ -84,6 +105,17 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
           defaultValue={parseHabiticaDate(task.date) ?? undefined}
         />
       )}
+
+      <Form.TagPicker
+        id="tags"
+        title="Tags"
+        defaultValue={task.tags ?? []}
+        placeholder={isLoadingTags ? "Loading tags…" : "Select tags"}
+      >
+        {tags.map((tag) => (
+          <Form.TagPicker.Item key={tag.id} value={tag.id} title={tag.name} />
+        ))}
+      </Form.TagPicker>
     </Form>
   );
 }

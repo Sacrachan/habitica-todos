@@ -118,6 +118,16 @@ export async function clearCompletedTodos(): Promise<void> {
   invalidateTasksCache();
 }
 
+export async function addTagToTask(taskId: string, tagId: string): Promise<void> {
+  await habiticaFetch(`/api/v3/tasks/${taskId}/tags/${tagId}`, { method: "POST" });
+  invalidateTasksCache();
+}
+
+export async function removeTagFromTask(taskId: string, tagId: string): Promise<void> {
+  await habiticaFetch(`/api/v3/tasks/${taskId}/tags/${tagId}`, { method: "DELETE" });
+  invalidateTasksCache();
+}
+
 export async function moveTask(taskId: string, position: number): Promise<void> {
   await habiticaFetch(`/api/v3/tasks/${taskId}/move/to/${position}`, { method: "POST" });
   invalidateTasksCache();
