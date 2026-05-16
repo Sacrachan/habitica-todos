@@ -164,7 +164,7 @@ export default function Command() {
               />
             )}
             <Action
-              title={isSleeping ? "Wake Up (Leave Tavern)" : "Rest in Tavern"}
+              title={isSleeping ? "Wake up" : "Rest in Tavern"}
               icon={isSleeping ? Icon.Sun : Icon.Moon}
               shortcut={{ modifiers: ["cmd", "shift"], key: "s" }}
               onAction={handleToggleSleep}

@@ -32,7 +32,6 @@ export default function SkillCastForm({ spellId, spellName, taskTypes, onCast }:
         setIsLoading(false);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleCast(task: HabiticaTask) {

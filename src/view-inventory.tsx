@@ -1,6 +1,6 @@
 import { ActionPanel, Action, Icon, Grid, showToast, Toast, Alert, confirmAlert, useNavigation } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
-import { getUser, hatchPet, feedPet, equipItem, sellItem, openMysteryItem } from "./api";
+import { getUser, equipItem, sellItem, openMysteryItem } from "./api";
 import { HabiticaUser } from "./types";
 import { ASSET_BASE_URL } from "./constants";
 import HatchForm from "./hatch-form";
@@ -165,7 +165,7 @@ export default function Command() {
     <>
       {pendingMystery > 0 && (
         <Action
-          title={`Open Mystery Item (${pendingMystery} pending)`}
+          title={`Open Mystery Item (${pendingMystery} Pending)`}
           icon={Icon.Gift}
           shortcut={{ modifiers: ["cmd"], key: "m" }}
           onAction={handleOpenMystery}
@@ -191,7 +191,7 @@ export default function Command() {
         return (
           <ActionPanel>
             <Action
-              title="Hatch With Potion"
+              title="Hatch Pet"
               icon={Icon.NewDocument}
               onAction={() =>
                 push(
@@ -216,7 +216,7 @@ export default function Command() {
         return (
           <ActionPanel>
             <Action
-              title="Hatch Egg With This Potion"
+              title="Hatch Egg"
               icon={Icon.NewDocument}
               onAction={() =>
                 push(
