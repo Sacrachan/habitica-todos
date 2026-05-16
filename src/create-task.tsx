@@ -3,13 +3,15 @@ import { useEffect, useState } from "react";
 import { createTask, getTags } from "./api";
 import { HabiticaTag, CreateTaskBody } from "./types";
 import { toHabiticaDate } from "./date-utils";
-import { PRIORITY_OPTIONS } from "./constants";
+import { PRIORITY_OPTIONS, ATTRIBUTE_OPTIONS } from "./constants";
+import { TaskAttribute } from "./types";
 
 interface FormValues {
   text: string;
   type: string;
   notes: string;
   priority: string;
+  attribute: string;
   date: Date | null;
   tags: string[];
   checklist: string;
@@ -57,6 +59,7 @@ export default function Command() {
 
     if (values.notes?.trim()) body.notes = values.notes.trim();
     if (values.priority) body.priority = parseFloat(values.priority);
+    if (values.attribute) body.attribute = values.attribute as TaskAttribute;
 
     if (taskType === "todo") {
       const dueDate = toHabiticaDate(values.date);
@@ -121,6 +124,17 @@ export default function Command() {
 
       <Form.Dropdown id="priority" title="Difficulty" defaultValue="1">
         {PRIORITY_OPTIONS.map((opt) => (
+          <Form.Dropdown.Item key={opt.value} value={opt.value} title={opt.title} />
+        ))}
+      </Form.Dropdown>
+
+      <Form.Dropdown
+        id="attribute"
+        title="Attribute"
+        defaultValue="str"
+        info="Stat this task trains. Auto-allocate uses this to distribute level-up points."
+      >
+        {ATTRIBUTE_OPTIONS.map((opt) => (
           <Form.Dropdown.Item key={opt.value} value={opt.value} title={opt.title} />
         ))}
       </Form.Dropdown>

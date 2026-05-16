@@ -1,9 +1,9 @@
 import { Form, ActionPanel, Action, showToast, Toast, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
-import { HabiticaTask, HabiticaTag, UpdateTaskBody } from "./types";
+import { HabiticaTask, HabiticaTag, TaskAttribute, UpdateTaskBody } from "./types";
 import { updateTask, getTags, addTagToTask, removeTagFromTask } from "./api";
 import { toHabiticaDate, parseHabiticaDate } from "./date-utils";
-import { PRIORITY_OPTIONS } from "./constants";
+import { PRIORITY_OPTIONS, ATTRIBUTE_OPTIONS } from "./constants";
 
 interface EditTaskFormProps {
   task: HabiticaTask;
@@ -14,6 +14,7 @@ interface FormValues {
   text: string;
   notes: string;
   priority: string;
+  attribute: string;
   date: Date | null;
   tags: string[];
 }
@@ -41,6 +42,7 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
     const body: UpdateTaskBody = { text: values.text.trim(), notes: values.notes.trim() };
 
     if (values.priority) body.priority = parseFloat(values.priority);
+    if (values.attribute) body.attribute = values.attribute as TaskAttribute;
 
     if (task.type === "todo") {
       const dueDate = toHabiticaDate(values.date);
@@ -93,6 +95,12 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
 
       <Form.Dropdown id="priority" title="Difficulty" defaultValue={String(task.priority)}>
         {PRIORITY_OPTIONS.map((opt) => (
+          <Form.Dropdown.Item key={opt.value} value={opt.value} title={opt.title} />
+        ))}
+      </Form.Dropdown>
+
+      <Form.Dropdown id="attribute" title="Attribute" defaultValue={task.attribute ?? "str"}>
+        {ATTRIBUTE_OPTIONS.map((opt) => (
           <Form.Dropdown.Item key={opt.value} value={opt.value} title={opt.title} />
         ))}
       </Form.Dropdown>

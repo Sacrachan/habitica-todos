@@ -134,6 +134,7 @@ export interface CreateTaskBody {
   priority?: number;
   date?: string;
   tags?: string[];
+  attribute?: TaskAttribute;
   checklist?: { text: string; completed?: boolean }[];
 }
 
@@ -142,6 +143,7 @@ export interface UpdateTaskBody {
   notes?: string;
   priority?: number;
   date?: string;
+  attribute?: TaskAttribute;
 }
 
 /** Only the gear subset is fetched from /api/v3/content (fields=gear). */

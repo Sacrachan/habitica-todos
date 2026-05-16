@@ -1,4 +1,15 @@
-import { ActionPanel, Action, Icon, Detail, showToast, Toast, Color, confirmAlert, Alert } from "@raycast/api";
+import {
+  ActionPanel,
+  Action,
+  Icon,
+  Detail,
+  showToast,
+  Toast,
+  Color,
+  confirmAlert,
+  Alert,
+  useNavigation,
+} from "@raycast/api";
 import { useEffect, useState, useCallback, useRef } from "react";
 import {
   getUser,
@@ -14,6 +25,7 @@ import {
 import { getAvatarSvg } from "./avatar";
 import { HabiticaUser } from "./types";
 import { SKILLS_BY_CLASS, STAT_LABELS } from "./constants";
+import SkillCastForm from "./skill-cast-form";
 
 const AVATAR_PLACEHOLDER = `data:image/svg+xml;base64,${Buffer.from(
   `<svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg"><rect width="140" height="140" rx="12" fill="#2d2c2a"/><circle cx="70" cy="52" r="22" fill="#444"/><ellipse cx="70" cy="110" rx="34" ry="24" fill="#444"/></svg>`,
@@ -24,6 +36,7 @@ export default function Command() {
   const [avatarUri, setAvatarUri] = useState<string>(AVATAR_PLACEHOLDER);
   const [isLoading, setIsLoading] = useState(true);
   const avatarGenRef = useRef(0); // incremented on each fetch to cancel stale avatar updates
+  const { push } = useNavigation();
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -161,12 +174,35 @@ export default function Command() {
             <ActionPanel.Section title="Skills">
               {skills.map((skill) => {
                 const canCast = userLevel >= skill.level && userMp >= skill.mana;
+                const title = `${skill.name}${skill.targetsTask ? "…" : ""} (${skill.mana} MP)`;
                 return (
                   <Action
                     key={skill.key}
-                    title={`${skill.name} (${skill.mana} MP)`}
+                    title={title}
                     icon={{ source: Icon.Wand, tintColor: canCast ? Color.Blue : Color.SecondaryText }}
-                    onAction={() => handleCastSkill(skill.key, skill.name, skill.mana, skill.level)}
+                    onAction={() => {
+                      if (skill.targetsTask) {
+                        if (userLevel < skill.level) {
+                          showToast({
+                            style: Toast.Style.Failure,
+                            title: "Level too low",
+                            message: `${skill.name} unlocks at level ${skill.level}`,
+                          });
+                          return;
+                        }
+                        if (userMp < skill.mana) {
+                          showToast({
+                            style: Toast.Style.Failure,
+                            title: "Not enough mana",
+                            message: `Needs ${skill.mana} MP — have ${userMp.toFixed(1)}`,
+                          });
+                          return;
+                        }
+                        push(<SkillCastForm spellId={skill.key} spellName={skill.name} onCast={fetchData} />);
+                      } else {
+                        handleCastSkill(skill.key, skill.name, skill.mana, skill.level);
+                      }
+                    }}
                   />
                 );
               })}

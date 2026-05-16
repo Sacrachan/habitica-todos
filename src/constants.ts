@@ -66,3 +66,10 @@ export const STAT_LABELS: Record<string, string> = {
   int: "Intelligence",
   per: "Perception",
 };
+
+export const ATTRIBUTE_OPTIONS: { value: string; title: string }[] = [
+  { value: "str", title: "Strength" },
+  { value: "int", title: "Intelligence" },
+  { value: "per", title: "Perception" },
+  { value: "con", title: "Constitution" },
+];

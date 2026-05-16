@@ -23,7 +23,7 @@ import {
   clearCompletedTodos,
 } from "../api";
 import { HabiticaTask, HabiticaTag } from "../types";
-import { PRIORITY_LABELS, TAG_FILTER_ALL } from "../constants";
+import { PRIORITY_LABELS, STAT_LABELS, TAG_FILTER_ALL } from "../constants";
 import { parseHabiticaDate } from "../date-utils";
 import EditTaskForm from "../edit-task";
 import ChecklistForm from "../checklist-form";
@@ -261,6 +261,10 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                   metadata={
                     <List.Item.Detail.Metadata>
                       <List.Item.Detail.Metadata.Label title="Difficulty" text={difficultyLabel} />
+                      <List.Item.Detail.Metadata.Label
+                        title="Attribute"
+                        text={STAT_LABELS[task.attribute] ?? "Strength"}
+                      />
                       {task.type === "habit" && (
                         <>
                           <List.Item.Detail.Metadata.Separator />
@@ -300,12 +304,34 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                           <List.Item.Detail.Metadata.TagList.Item text="No tags" color={Color.SecondaryText} />
                         )}
                       </List.Item.Detail.Metadata.TagList>
-                      <List.Item.Detail.Metadata.Separator />
-                      <List.Item.Detail.Metadata.Label
-                        title="Status"
-                        text={task.completed ? "Completed" : "Pending"}
-                        icon={task.completed ? Icon.CheckCircle : Icon.Circle}
-                      />
+                      {(task.type === "todo" || task.type === "daily") && (
+                        <>
+                          <List.Item.Detail.Metadata.Separator />
+                          <List.Item.Detail.Metadata.Label
+                            title="Status"
+                            text={
+                              task.completed
+                                ? task.type === "daily"
+                                  ? "Done today"
+                                  : "Completed"
+                                : task.type === "daily"
+                                  ? "Pending today"
+                                  : "Pending"
+                            }
+                            icon={task.completed ? Icon.CheckCircle : Icon.Circle}
+                          />
+                        </>
+                      )}
+                      {task.type === "reward" && (
+                        <>
+                          <List.Item.Detail.Metadata.Separator />
+                          <List.Item.Detail.Metadata.Label
+                            title="Cost"
+                            text={`${task.value} GP`}
+                            icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
+                          />
+                        </>
+                      )}
                     </List.Item.Detail.Metadata>
                   }
                 />
