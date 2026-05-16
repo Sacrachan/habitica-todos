@@ -102,7 +102,10 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     fetchData();
   }, [fetchData]);
 
-  const filteredTasks = tagFilter === TAG_FILTER_ALL ? tasks : tasks.filter((t) => t.tags.includes(tagFilter));
+  const filteredTasks = (tagFilter === TAG_FILTER_ALL ? tasks : tasks.filter((t) => t.tags.includes(tagFilter)))
+    .slice()
+    // Habitica's web UI floats completed todos/dailies to the bottom; do the same.
+    .sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
 
   async function handleScore(task: HabiticaTask, direction: "up" | "down" = "up") {
     let actionName = "Completing";

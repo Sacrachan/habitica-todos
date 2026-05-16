@@ -56,7 +56,15 @@ async function habiticaFetch<T>(endpoint: string, options: { method?: string; bo
   });
 
   if (!response.ok) {
-    throw new Error(`Habitica API error: ${response.status} ${response.statusText} - ${await response.text()}`);
+    const text = await response.text();
+    let detail: string | undefined;
+    try {
+      const parsed = JSON.parse(text) as { message?: string; error?: string };
+      detail = parsed.message ?? parsed.error;
+    } catch {
+      // Body wasn't JSON; fall through to generic error.
+    }
+    throw new Error(detail ?? `Habitica API error: ${response.status} ${response.statusText}`);
   }
 
   const json = (await response.json()) as { success: boolean; data: T; message?: string };
