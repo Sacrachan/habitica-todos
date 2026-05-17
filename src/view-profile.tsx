@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   ActionPanel,
   Action,
@@ -26,6 +27,13 @@ import { getAvatarSvg } from "./avatar";
 import { HabiticaUser } from "./types";
 import { SKILLS_BY_CLASS, STAT_LABELS } from "./constants";
 import SkillCastForm from "./skill-cast-form";
+=======
+import { ActionPanel, Action, Icon, Detail, showToast, Toast, Color, confirmAlert, Alert } from "@raycast/api";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { getUser, forceCompleteQuest, acceptQuest, abortQuest } from "./api";
+import { getAvatarSvg } from "./avatar";
+import { HabiticaUser } from "./types";
+>>>>>>> contributions/merge-1779058516750
 
 const AVATAR_PLACEHOLDER = `data:image/svg+xml;base64,${Buffer.from(
   `<svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg"><rect width="140" height="140" rx="12" fill="#2d2c2a"/><circle cx="70" cy="52" r="22" fill="#444"/><ellipse cx="70" cy="110" rx="34" ry="24" fill="#444"/></svg>`,
@@ -36,7 +44,10 @@ export default function Command() {
   const [avatarUri, setAvatarUri] = useState<string>(AVATAR_PLACEHOLDER);
   const [isLoading, setIsLoading] = useState(true);
   const avatarGenRef = useRef(0); // incremented on each fetch to cancel stale avatar updates
+<<<<<<< HEAD
   const { push } = useNavigation();
+=======
+>>>>>>> contributions/merge-1779058516750
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -66,6 +77,7 @@ export default function Command() {
 
   const stats = user?.stats;
   const quest = user?.party?.quest;
+<<<<<<< HEAD
   const userClass = stats?.class;
   const userLevel = stats?.lvl ?? 0;
   const userMp = stats?.mp ?? 0;
@@ -73,6 +85,8 @@ export default function Command() {
   const unallocatedPoints = stats?.points ?? 0;
   const isSleeping = user?.preferences?.sleep ?? false;
   const isDead = stats ? stats.hp <= 0 : false;
+=======
+>>>>>>> contributions/merge-1779058516750
 
   let questMarkdown = "### No Active Quest\n\nYou are not currently on a quest.";
   if (quest?.key) {
@@ -103,7 +117,11 @@ export default function Command() {
           />
           <Detail.Metadata.Label
             title="Mana"
+<<<<<<< HEAD
             text={`${(stats?.mp ?? 0).toFixed(1)}${stats?.maxMP ? ` / ${stats.maxMP}` : ""}`}
+=======
+            text={(stats?.mp ?? 0).toFixed(1)}
+>>>>>>> contributions/merge-1779058516750
             icon={{ source: Icon.Star, tintColor: Color.Blue }}
           />
           <Detail.Metadata.Label
@@ -116,6 +134,7 @@ export default function Command() {
             text={(stats?.gp ?? 0).toFixed(2)}
             icon={{ source: Icon.Coins, tintColor: Color.Yellow }}
           />
+<<<<<<< HEAD
           {userClass && (
             <Detail.Metadata.Label
               title="Class"
@@ -137,6 +156,8 @@ export default function Command() {
               icon={{ source: Icon.Moon, tintColor: Color.Blue }}
             />
           )}
+=======
+>>>>>>> contributions/merge-1779058516750
           {quest?.key && (
             <Detail.Metadata.TagList title="Quest Status">
               <Detail.Metadata.TagList.Item
@@ -156,6 +177,7 @@ export default function Command() {
               shortcut={{ modifiers: ["cmd"], key: "r" }}
               onAction={fetchData}
             />
+<<<<<<< HEAD
             {isDead && (
               <Action
                 title="Revive Character"
@@ -221,6 +243,9 @@ export default function Command() {
               <Action title="Auto-Allocate All" icon={Icon.Stars} onAction={handleAllocateNow} />
             </ActionPanel.Section>
           )}
+=======
+          </ActionPanel.Section>
+>>>>>>> contributions/merge-1779058516750
           {quest?.key && (
             <ActionPanel.Section title="Quest Actions">
               {!quest.active && (
@@ -253,6 +278,7 @@ export default function Command() {
     />
   );
 
+<<<<<<< HEAD
   async function handleCastSkill(spellId: string, name: string, mana: number, level: number) {
     if (userLevel < level) {
       await showToast({
@@ -339,6 +365,8 @@ export default function Command() {
     }
   }
 
+=======
+>>>>>>> contributions/merge-1779058516750
   async function handleQuestAction(action: "accept" | "abort" | "force-complete") {
     if (action === "abort") {
       const confirmed = await confirmAlert({

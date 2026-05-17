@@ -53,14 +53,22 @@
     {
       "name": "view-profile",
       "title": "View Profile",
+<<<<<<< HEAD
       "description": "View stats, cast class skills, allocate stat points, rest in the tavern, and manage quests",
+=======
+      "description": "View your Habitica stats and quests",
+>>>>>>> contributions/merge-1779058516750
       "mode": "view",
       "subtitle": "Habitica"
     },
     {
       "name": "view-inventory",
       "title": "View Inventory",
+<<<<<<< HEAD
       "description": "View, hatch, feed, sell, equip, and open mystery items in your Habitica inventory",
+=======
+      "description": "View your Habitica eggs, potions, and food",
+>>>>>>> contributions/merge-1779058516750
       "mode": "view",
       "subtitle": "Habitica"
     },

@@ -269,6 +269,7 @@ export default function Command() {
       isShowingDetail
       searchBarAccessory={filterDropdown}
     >
+<<<<<<< HEAD
       {!showMarket && !showGear && !showRewards && !isLoading && (
         <List.EmptyView
           title="Nothing to show"
@@ -279,6 +280,8 @@ export default function Command() {
           }
         />
       )}
+=======
+>>>>>>> contributions/merge-1779058516750
       {showMarket && (
         <List.Section title="Market" subtitle={goldLabel}>
           {filteredItems
@@ -293,6 +296,7 @@ export default function Command() {
                 actions={
                   <ActionPanel>
                     <Action title="Buy Item" icon={Icon.Cart} onAction={() => handleBuy(item)} />
+<<<<<<< HEAD
                     <Action
                       title="Refresh"
                       icon={Icon.ArrowClockwise}
@@ -304,6 +308,9 @@ export default function Command() {
                       url="https://habitica.com/shops/market"
                       shortcut={{ modifiers: ["cmd"], key: "o" }}
                     />
+=======
+                    <Action title="Refresh" icon={Icon.ArrowClockwise} onAction={fetchData} />
+>>>>>>> contributions/merge-1779058516750
                   </ActionPanel>
                 }
               />
@@ -328,6 +335,7 @@ export default function Command() {
                   actions={
                     <ActionPanel>
                       <Action title="Buy Gear" icon={Icon.Cart} onAction={() => handleBuy(item)} />
+<<<<<<< HEAD
                       <Action
                         title="Refresh"
                         icon={Icon.ArrowClockwise}
@@ -339,6 +347,9 @@ export default function Command() {
                         url="https://habitica.com/shops/market"
                         shortcut={{ modifiers: ["cmd"], key: "o" }}
                       />
+=======
+                      <Action title="Refresh" icon={Icon.ArrowClockwise} onAction={fetchData} />
+>>>>>>> contributions/merge-1779058516750
                     </ActionPanel>
                   }
                 />
@@ -361,6 +372,7 @@ export default function Command() {
                 actions={
                   <ActionPanel>
                     <Action title="Buy Reward" icon={Icon.Cart} onAction={() => handleBuy(item)} />
+<<<<<<< HEAD
                     <Action
                       title="Refresh"
                       icon={Icon.ArrowClockwise}
@@ -372,6 +384,9 @@ export default function Command() {
                       url="https://habitica.com/"
                       shortcut={{ modifiers: ["cmd"], key: "o" }}
                     />
+=======
+                    <Action title="Refresh" icon={Icon.ArrowClockwise} onAction={fetchData} />
+>>>>>>> contributions/merge-1779058516750
                   </ActionPanel>
                 }
               />

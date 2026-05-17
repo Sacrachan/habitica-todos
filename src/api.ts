@@ -56,6 +56,7 @@ async function habiticaFetch<T>(endpoint: string, options: { method?: string; bo
   });
 
   if (!response.ok) {
+<<<<<<< HEAD
     const text = await response.text();
     let detail: string | undefined;
     try {
@@ -65,6 +66,9 @@ async function habiticaFetch<T>(endpoint: string, options: { method?: string; bo
       // Body wasn't JSON; fall through to generic error.
     }
     throw new Error(detail ?? `Habitica API error: ${response.status} ${response.statusText}`);
+=======
+    throw new Error(`Habitica API error: ${response.status} ${response.statusText} - ${await response.text()}`);
+>>>>>>> contributions/merge-1779058516750
   }
 
   const json = (await response.json()) as { success: boolean; data: T; message?: string };
@@ -95,6 +99,10 @@ export async function getTags(): Promise<HabiticaTag[]> {
 export async function scoreTask(taskId: string, direction: "up" | "down"): Promise<void> {
   await habiticaFetch(`/api/v3/tasks/${taskId}/score/${direction}`, { method: "POST" });
   invalidateTasksCache();
+<<<<<<< HEAD
+=======
+  invalidateTagsCache();
+>>>>>>> contributions/merge-1779058516750
   invalidateUserCache();
 }
 
@@ -104,17 +112,26 @@ export async function updateTask(taskId: string, body: UpdateTaskBody): Promise<
     body: JSON.stringify(body),
   });
   invalidateTasksCache();
+<<<<<<< HEAD
+=======
+  invalidateTagsCache();
+>>>>>>> contributions/merge-1779058516750
   return result;
 }
 
 export async function createTask(body: CreateTaskBody): Promise<void> {
   await habiticaFetch("/api/v3/tasks/user", { method: "POST", body: JSON.stringify(body) });
   invalidateTasksCache();
+<<<<<<< HEAD
+=======
+  invalidateTagsCache();
+>>>>>>> contributions/merge-1779058516750
 }
 
 export async function deleteTask(taskId: string): Promise<void> {
   await habiticaFetch(`/api/v3/tasks/${taskId}`, { method: "DELETE" });
   invalidateTasksCache();
+<<<<<<< HEAD
 }
 
 export async function clearCompletedTodos(): Promise<void> {
@@ -130,13 +147,20 @@ export async function addTagToTask(taskId: string, tagId: string): Promise<void>
 export async function removeTagFromTask(taskId: string, tagId: string): Promise<void> {
   await habiticaFetch(`/api/v3/tasks/${taskId}/tags/${tagId}`, { method: "DELETE" });
   invalidateTasksCache();
+=======
+  invalidateTagsCache();
+>>>>>>> contributions/merge-1779058516750
 }
 
 export async function getUser(): Promise<HabiticaUser> {
   if (isFresh(cache.user)) return cache.user.data;
+<<<<<<< HEAD
   const data = await habiticaFetch<HabiticaUser>(
     "/api/v3/user?userFields=stats,party,items,profile,preferences,flags,needsCron,purchased.plan.mysteryItems",
   );
+=======
+  const data = await habiticaFetch<HabiticaUser>("/api/v3/user?userFields=stats,party,items,profile,preferences");
+>>>>>>> contributions/merge-1779058516750
   cache.user = { data, expiresAt: Date.now() + USER_TTL_MS };
   return data;
 }
@@ -178,6 +202,7 @@ export async function buyArmoire(): Promise<void> {
   await habiticaFetch("/api/v3/user/buy-armoire", { method: "POST" });
   invalidateUserCache();
 }
+<<<<<<< HEAD
 
 // ---------------------------------------------------------------------------
 // Checklist
@@ -272,3 +297,5 @@ export async function reviveUser(): Promise<void> {
   await habiticaFetch("/api/v3/user/revive", { method: "POST" });
   invalidateUserCache();
 }
+=======
+>>>>>>> contributions/merge-1779058516750

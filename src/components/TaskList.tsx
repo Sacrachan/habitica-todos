@@ -11,6 +11,7 @@ import {
   useNavigation,
 } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
+<<<<<<< HEAD
 import {
   getTasks,
   getTags,
@@ -28,12 +29,19 @@ import { parseHabiticaDate } from "../date-utils";
 import EditTaskForm from "../edit-task";
 import ChecklistForm from "../checklist-form";
 import { CreateTaskForm } from "../create-task";
+=======
+import { getTasks, getTags, scoreTask, deleteTask } from "../api";
+import { HabiticaTask, HabiticaTag } from "../types";
+import { PRIORITY_LABELS, TAG_FILTER_ALL } from "../constants";
+import EditTaskForm from "../edit-task";
+>>>>>>> contributions/merge-1779058516750
 
 interface TaskListProps {
   type: "todos" | "dailys" | "habits" | "rewards";
   navigationTitle: string;
 }
 
+<<<<<<< HEAD
 const LIST_TYPE_TO_TASK_TYPE: Record<TaskListProps["type"], CreateTaskBody["type"] | undefined> = {
   todos: "todo",
   dailys: "daily",
@@ -45,6 +53,11 @@ function isTaskExpired(task: HabiticaTask): boolean {
   if (task.completed || !task.date) return false;
   const dueDate = parseHabiticaDate(task.date);
   if (!dueDate) return false;
+=======
+function isTaskExpired(task: HabiticaTask): boolean {
+  if (task.completed || !task.date) return false;
+  const dueDate = new Date(task.date);
+>>>>>>> contributions/merge-1779058516750
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   dueDate.setHours(0, 0, 0, 0);
@@ -52,6 +65,7 @@ function isTaskExpired(task: HabiticaTask): boolean {
 }
 
 function formatTaskDate(date: string | null | undefined): string | undefined {
+<<<<<<< HEAD
   const taskDate = parseHabiticaDate(date);
   if (!taskDate) return undefined;
   const now = new Date();
@@ -61,6 +75,12 @@ function formatTaskDate(date: string | null | undefined): string | undefined {
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Tomorrow";
   if (diffDays === -1) return "Yesterday";
+=======
+  if (!date) return undefined;
+  const taskDate = new Date(date);
+  if (Number.isNaN(taskDate.getTime())) return undefined;
+  const now = new Date();
+>>>>>>> contributions/merge-1779058516750
   const isCurrentYear = taskDate.getFullYear() === now.getFullYear();
   return taskDate.toLocaleDateString("en-US", {
     month: "short",
@@ -110,10 +130,14 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     fetchData();
   }, [fetchData]);
 
+<<<<<<< HEAD
   const filteredTasks = (tagFilter === TAG_FILTER_ALL ? tasks : tasks.filter((t) => t.tags.includes(tagFilter)))
     .slice()
     // Habitica's web UI floats completed todos/dailies to the bottom; do the same.
     .sort((a, b) => (a.completed === b.completed ? 0 : a.completed ? 1 : -1));
+=======
+  const filteredTasks = tagFilter === TAG_FILTER_ALL ? tasks : tasks.filter((t) => t.tags.includes(tagFilter));
+>>>>>>> contributions/merge-1779058516750
 
   async function handleScore(task: HabiticaTask, direction: "up" | "down" = "up") {
     let actionName = "Completing";
@@ -145,6 +169,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     }
   }
 
+<<<<<<< HEAD
   async function handleChecklistScore(task: HabiticaTask, item: { id: string; text: string }) {
     try {
       await showToast({ style: Toast.Style.Animated, title: "Updating checklist…" });
@@ -190,6 +215,8 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
     }
   }
 
+=======
+>>>>>>> contributions/merge-1779058516750
   async function handleDelete(task: HabiticaTask) {
     const confirmed = await confirmAlert({
       title: "Delete Task",
@@ -214,6 +241,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
   }
 
   const tagNameMap = new Map(tags.map((t) => [t.id, t.name]));
+<<<<<<< HEAD
   const defaultCreateType = LIST_TYPE_TO_TASK_TYPE[type];
 
   const createTaskAction = defaultCreateType ? (
@@ -224,6 +252,8 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
       onAction={() => push(<CreateTaskForm defaultType={defaultCreateType} onCreated={fetchData} />)}
     />
   ) : null;
+=======
+>>>>>>> contributions/merge-1779058516750
 
   return (
     <List
@@ -241,11 +271,15 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
       }
     >
       {filteredTasks.length === 0 && !isLoading ? (
+<<<<<<< HEAD
         <List.EmptyView
           title="No tasks found"
           description="Create a new one to get started!"
           actions={createTaskAction ? <ActionPanel>{createTaskAction}</ActionPanel> : undefined}
         />
+=======
+        <List.EmptyView title="No tasks found" description="Create a new one to get started!" />
+>>>>>>> contributions/merge-1779058516750
       ) : (
         filteredTasks.map((task) => {
           const icon = taskIcon(task);
@@ -253,6 +287,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
           const taskTagNames = task.tags.map((tid) => tagNameMap.get(tid)).filter(Boolean) as string[];
           const difficultyLabel = PRIORITY_LABELS[task.priority] ?? "Unknown";
 
+<<<<<<< HEAD
           const checklist = task.checklist ?? [];
           const checklistDone = checklist.filter((c) => c.completed).length;
           const checklistMarkdown =
@@ -272,23 +307,33 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
             });
           }
           if (formattedDate) accessories.push({ text: formattedDate });
+=======
+          const detailMarkdown = task.notes || "*No description*";
+>>>>>>> contributions/merge-1779058516750
 
           return (
             <List.Item
               key={task.id}
               icon={icon}
               title={task.text}
+<<<<<<< HEAD
               accessories={accessories.length > 0 ? accessories : undefined}
+=======
+              accessories={formattedDate ? [{ text: formattedDate }] : undefined}
+>>>>>>> contributions/merge-1779058516750
               detail={
                 <List.Item.Detail
                   markdown={detailMarkdown}
                   metadata={
                     <List.Item.Detail.Metadata>
                       <List.Item.Detail.Metadata.Label title="Difficulty" text={difficultyLabel} />
+<<<<<<< HEAD
                       <List.Item.Detail.Metadata.Label
                         title="Attribute"
                         text={STAT_LABELS[task.attribute] ?? "Strength"}
                       />
+=======
+>>>>>>> contributions/merge-1779058516750
                       {task.type === "habit" && (
                         <>
                           <List.Item.Detail.Metadata.Separator />
@@ -308,6 +353,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                           <List.Item.Detail.Metadata.Label title="Due Date" text={formattedDate} />
                         </>
                       )}
+<<<<<<< HEAD
                       {checklist.length > 0 && (
                         <>
                           <List.Item.Detail.Metadata.Separator />
@@ -318,6 +364,8 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                           />
                         </>
                       )}
+=======
+>>>>>>> contributions/merge-1779058516750
                       <List.Item.Detail.Metadata.Separator />
                       <List.Item.Detail.Metadata.TagList title="Tags">
                         {taskTagNames.length > 0 ? (
@@ -328,6 +376,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                           <List.Item.Detail.Metadata.TagList.Item text="No tags" color={Color.SecondaryText} />
                         )}
                       </List.Item.Detail.Metadata.TagList>
+<<<<<<< HEAD
                       {(task.type === "todo" || task.type === "daily") && (
                         <>
                           <List.Item.Detail.Metadata.Separator />
@@ -356,6 +405,14 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                           />
                         </>
                       )}
+=======
+                      <List.Item.Detail.Metadata.Separator />
+                      <List.Item.Detail.Metadata.Label
+                        title="Status"
+                        text={task.completed ? "Completed" : "Pending"}
+                        icon={task.completed ? Icon.CheckCircle : Icon.Circle}
+                      />
+>>>>>>> contributions/merge-1779058516750
                     </List.Item.Detail.Metadata>
                   }
                 />
@@ -403,6 +460,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                       onAction={() => handleDelete(task)}
                     />
                   </ActionPanel.Section>
+<<<<<<< HEAD
                   {(task.type === "todo" || task.type === "daily") && (
                     <ActionPanel.Section title="Checklist">
                       <Action
@@ -481,6 +539,9 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                         onAction={handleClearCompleted}
                       />
                     )}
+=======
+                  <ActionPanel.Section>
+>>>>>>> contributions/merge-1779058516750
                     <Action
                       title="Refresh"
                       icon={Icon.ArrowClockwise}

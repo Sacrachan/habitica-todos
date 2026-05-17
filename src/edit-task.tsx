@@ -1,9 +1,16 @@
 import { Form, ActionPanel, Action, showToast, Toast, useNavigation } from "@raycast/api";
+<<<<<<< HEAD
 import { useEffect, useState } from "react";
 import { HabiticaTask, HabiticaTag, TaskAttribute, UpdateTaskBody } from "./types";
 import { updateTask, getTags, addTagToTask, removeTagFromTask } from "./api";
 import { toHabiticaDate, parseHabiticaDate } from "./date-utils";
 import { PRIORITY_OPTIONS, ATTRIBUTE_OPTIONS } from "./constants";
+=======
+import { HabiticaTask, UpdateTaskBody } from "./types";
+import { updateTask } from "./api";
+import { toHabiticaDate } from "./date-utils";
+import { PRIORITY_OPTIONS } from "./constants";
+>>>>>>> contributions/merge-1779058516750
 
 interface EditTaskFormProps {
   task: HabiticaTask;
@@ -14,13 +21,18 @@ interface FormValues {
   text: string;
   notes: string;
   priority: string;
+<<<<<<< HEAD
   attribute: string;
   date: Date | null;
   tags: string[];
+=======
+  date: Date | null;
+>>>>>>> contributions/merge-1779058516750
 }
 
 export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
   const { pop } = useNavigation();
+<<<<<<< HEAD
   const [tags, setTags] = useState<HabiticaTag[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(true);
 
@@ -30,6 +42,8 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
       .catch((error) => showToast({ style: Toast.Style.Failure, title: "Failed to load tags", message: String(error) }))
       .finally(() => setIsLoadingTags(false));
   }, []);
+=======
+>>>>>>> contributions/merge-1779058516750
 
   async function handleSubmit(values: FormValues) {
     if (!values.text.trim()) {
@@ -40,13 +54,22 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
     const body: UpdateTaskBody = { text: values.text.trim(), notes: values.notes.trim() };
 
     if (values.priority) body.priority = parseFloat(values.priority);
+<<<<<<< HEAD
     if (values.attribute) body.attribute = values.attribute as TaskAttribute;
 
+=======
+
+    // Only apply date changes for task types that expose the DatePicker
+>>>>>>> contributions/merge-1779058516750
     if (task.type === "todo") {
       const dueDate = toHabiticaDate(values.date);
       if (dueDate) {
         body.date = dueDate;
       } else if (task.date) {
+<<<<<<< HEAD
+=======
+        // Explicitly clear the date if the user removed it
+>>>>>>> contributions/merge-1779058516750
         body.date = "";
       }
     }
@@ -54,6 +77,7 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
     try {
       await showToast({ style: Toast.Style.Animated, title: "Updating task…" });
       await updateTask(task.id, body);
+<<<<<<< HEAD
 
       const desired = new Set(values.tags ?? []);
       const current = new Set(task.tags ?? []);
@@ -64,6 +88,8 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
         ...toRemove.map((id) => removeTagFromTask(task.id, id)),
       ]);
 
+=======
+>>>>>>> contributions/merge-1779058516750
       await showToast({ style: Toast.Style.Success, title: "Task updated!" });
       onUpdated();
       pop();
@@ -97,17 +123,21 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
         ))}
       </Form.Dropdown>
 
+<<<<<<< HEAD
       <Form.Dropdown id="attribute" title="Attribute" defaultValue={task.attribute ?? "str"}>
         {ATTRIBUTE_OPTIONS.map((opt) => (
           <Form.Dropdown.Item key={opt.value} value={opt.value} title={opt.title} />
         ))}
       </Form.Dropdown>
 
+=======
+>>>>>>> contributions/merge-1779058516750
       {task.type === "todo" && (
         <Form.DatePicker
           id="date"
           title="Due Date"
           type={Form.DatePicker.Type.Date}
+<<<<<<< HEAD
           defaultValue={parseHabiticaDate(task.date) ?? undefined}
         />
       )}
@@ -122,6 +152,11 @@ export default function EditTaskForm({ task, onUpdated }: EditTaskFormProps) {
           <Form.TagPicker.Item key={tag.id} value={tag.id} title={tag.name} />
         ))}
       </Form.TagPicker>
+=======
+          defaultValue={task.date ? new Date(task.date) : undefined}
+        />
+      )}
+>>>>>>> contributions/merge-1779058516750
     </Form>
   );
 }

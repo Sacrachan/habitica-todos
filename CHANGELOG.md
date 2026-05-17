@@ -13,7 +13,7 @@
 - Fix a timezone bug that displayed due dates as the previous day for users west of UTC
 - Cleaner API error toasts (parse the JSON message body) and Today/Tomorrow date labels
 
-## [Add more commands and improve UI] - {PR_MERGE_DATE}
+## [Add more commands and improve UI] - 2026-05-12
 
 - Add "View Dailies" command
 - Add "View Habits" command
