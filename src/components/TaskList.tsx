@@ -408,7 +408,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                       <Action
                         title="Add Checklist Item"
                         icon={Icon.PlusCircle}
-                        shortcut={{ modifiers: ["cmd"], key: "k" }}
+                        shortcut={{ modifiers: ["cmd", "shift"], key: "k" }}
                         onAction={() =>
                           push(
                             <ChecklistForm
