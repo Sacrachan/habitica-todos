@@ -22,16 +22,24 @@ import {
   updateChecklistItem,
   clearCompletedTodos,
 } from "../api";
-import { HabiticaTask, HabiticaTag } from "../types";
+import { HabiticaTask, HabiticaTag, CreateTaskBody } from "../types";
 import { PRIORITY_LABELS, STAT_LABELS, TAG_FILTER_ALL } from "../constants";
 import { parseHabiticaDate } from "../date-utils";
 import EditTaskForm from "../edit-task";
 import ChecklistForm from "../checklist-form";
+import { CreateTaskForm } from "../create-task";
 
 interface TaskListProps {
   type: "todos" | "dailys" | "habits" | "rewards";
   navigationTitle: string;
 }
+
+const LIST_TYPE_TO_TASK_TYPE: Record<TaskListProps["type"], CreateTaskBody["type"] | undefined> = {
+  todos: "todo",
+  dailys: "daily",
+  habits: "habit",
+  rewards: undefined,
+};
 
 function isTaskExpired(task: HabiticaTask): boolean {
   if (task.completed || !task.date) return false;
@@ -206,6 +214,16 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
   }
 
   const tagNameMap = new Map(tags.map((t) => [t.id, t.name]));
+  const defaultCreateType = LIST_TYPE_TO_TASK_TYPE[type];
+
+  const createTaskAction = defaultCreateType ? (
+    <Action
+      title="Create New Task"
+      icon={Icon.Plus}
+      shortcut={{ modifiers: ["cmd"], key: "n" }}
+      onAction={() => push(<CreateTaskForm defaultType={defaultCreateType} onCreated={fetchData} />)}
+    />
+  ) : null;
 
   return (
     <List
@@ -223,7 +241,11 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
       }
     >
       {filteredTasks.length === 0 && !isLoading ? (
-        <List.EmptyView title="No tasks found" description="Create a new one to get started!" />
+        <List.EmptyView
+          title="No tasks found"
+          description="Create a new one to get started!"
+          actions={createTaskAction ? <ActionPanel>{createTaskAction}</ActionPanel> : undefined}
+        />
       ) : (
         filteredTasks.map((task) => {
           const icon = taskIcon(task);
@@ -449,6 +471,7 @@ export default function TaskList({ type, navigationTitle }: TaskListProps) {
                     </ActionPanel.Section>
                   )}
                   <ActionPanel.Section>
+                    {createTaskAction}
                     {type === "todos" && tasks.some((t) => t.completed) && (
                       <Action
                         title="Clear Completed To-Dos"

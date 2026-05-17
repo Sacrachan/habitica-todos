@@ -1,4 +1,4 @@
-import { Form, ActionPanel, Action, showToast, Toast, launchCommand, LaunchType } from "@raycast/api";
+import { Form, ActionPanel, Action, showToast, Toast, launchCommand, LaunchType, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { createTask, getTags } from "./api";
 import { HabiticaTag, CreateTaskBody, TaskAttribute } from "./types";
@@ -22,10 +22,16 @@ const TYPE_TO_COMMAND: Record<string, string> = {
   daily: "view-dailies",
 };
 
-export default function Command() {
+interface CreateTaskFormProps {
+  defaultType?: CreateTaskBody["type"];
+  onCreated?: () => void;
+}
+
+export function CreateTaskForm({ defaultType = "todo", onCreated }: CreateTaskFormProps) {
+  const { pop } = useNavigation();
   const [tags, setTags] = useState<HabiticaTag[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(true);
-  const [type, setType] = useState<string>("todo");
+  const [type, setType] = useState<string>(defaultType);
 
   useEffect(() => {
     loadTags();
@@ -80,8 +86,14 @@ export default function Command() {
       await showToast({ style: Toast.Style.Animated, title: "Creating task…" });
       await createTask(body);
       await showToast({ style: Toast.Style.Success, title: "Task created!" });
-      const targetCommand = TYPE_TO_COMMAND[taskType] ?? "view-tasks";
-      await launchCommand({ name: targetCommand, type: LaunchType.UserInitiated });
+
+      if (onCreated) {
+        onCreated();
+        pop();
+      } else {
+        const targetCommand = TYPE_TO_COMMAND[taskType] ?? "view-tasks";
+        await launchCommand({ name: targetCommand, type: LaunchType.UserInitiated });
+      }
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -149,4 +161,8 @@ export default function Command() {
       </Form.TagPicker>
     </Form>
   );
+}
+
+export default function Command() {
+  return <CreateTaskForm />;
 }
