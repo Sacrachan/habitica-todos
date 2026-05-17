@@ -37,7 +37,6 @@ export interface HabiticaUser {
     lvl: number;
     gp: number;
     maxHealth?: number;
-<<<<<<< HEAD
     maxMP?: number;
     class?: string;
     points?: number;
@@ -56,9 +55,6 @@ export interface HabiticaUser {
     plan?: {
       mysteryItems?: string[];
     };
-=======
-    class?: string;
->>>>>>> contributions/merge-1779058516750
   };
   party?: {
     quest?: {
@@ -82,15 +78,10 @@ export interface HabiticaUser {
       costume: Record<string, string>;
       owned: Record<string, boolean>;
     };
-<<<<<<< HEAD
     /** Pets store feed progress (5–50); -1 indicates a released pet. */
     pets: Record<string, number>;
     /** Mounts store boolean ownership; false indicates a released mount. */
     mounts: Record<string, boolean>;
-=======
-    pets: Record<string, number>;
-    mounts: Record<string, number>;
->>>>>>> contributions/merge-1779058516750
     currentPet?: string;
     currentMount?: string;
   };
@@ -108,15 +99,12 @@ export interface HabiticaUser {
   };
 }
 
-<<<<<<< HEAD
 export interface HabiticaChecklistItem {
   id: string;
   text: string;
   completed: boolean;
 }
 
-=======
->>>>>>> contributions/merge-1779058516750
 export interface HabiticaTask {
   id: string;
   text: string;
@@ -133,10 +121,7 @@ export interface HabiticaTask {
   streak?: number;
   up?: boolean;
   down?: boolean;
-<<<<<<< HEAD
   checklist?: HabiticaChecklistItem[];
-=======
->>>>>>> contributions/merge-1779058516750
 }
 
 export interface HabiticaTag {
@@ -151,11 +136,8 @@ export interface CreateTaskBody {
   priority?: number;
   date?: string;
   tags?: string[];
-<<<<<<< HEAD
   attribute?: TaskAttribute;
   checklist?: { text: string; completed?: boolean }[];
-=======
->>>>>>> contributions/merge-1779058516750
 }
 
 export interface UpdateTaskBody {
@@ -163,10 +145,7 @@ export interface UpdateTaskBody {
   notes?: string;
   priority?: number;
   date?: string;
-<<<<<<< HEAD
   attribute?: TaskAttribute;
-=======
->>>>>>> contributions/merge-1779058516750
 }
 
 /** Only the gear subset is fetched from /api/v3/content (fields=gear). */

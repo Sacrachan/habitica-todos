@@ -1,33 +1,19 @@
-<<<<<<< HEAD
 import { Form, ActionPanel, Action, showToast, Toast, launchCommand, LaunchType, useNavigation } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { createTask, getTags } from "./api";
 import { HabiticaTag, CreateTaskBody, TaskAttribute } from "./types";
 import { toHabiticaDate } from "./date-utils";
 import { PRIORITY_OPTIONS, ATTRIBUTE_OPTIONS } from "./constants";
-=======
-import { Form, ActionPanel, Action, showToast, Toast, launchCommand, LaunchType } from "@raycast/api";
-import { useEffect, useState } from "react";
-import { createTask, getTags } from "./api";
-import { HabiticaTag, CreateTaskBody } from "./types";
-import { toHabiticaDate } from "./date-utils";
-import { PRIORITY_OPTIONS } from "./constants";
->>>>>>> contributions/merge-1779058516750
 
 interface FormValues {
   text: string;
   type: string;
   notes: string;
   priority: string;
-<<<<<<< HEAD
   attribute: string;
   date: Date | null;
   tags: string[];
   checklist: string;
-=======
-  date: Date | null;
-  tags: string[];
->>>>>>> contributions/merge-1779058516750
 }
 
 const TYPE_TO_COMMAND: Record<string, string> = {
@@ -36,7 +22,6 @@ const TYPE_TO_COMMAND: Record<string, string> = {
   daily: "view-dailies",
 };
 
-<<<<<<< HEAD
 interface CreateTaskFormProps {
   defaultType?: CreateTaskBody["type"];
   onCreated?: () => void;
@@ -47,11 +32,6 @@ export function CreateTaskForm({ defaultType = "todo", onCreated }: CreateTaskFo
   const [tags, setTags] = useState<HabiticaTag[]>([]);
   const [isLoadingTags, setIsLoadingTags] = useState(true);
   const [type, setType] = useState<string>(defaultType);
-=======
-export default function Command() {
-  const [tags, setTags] = useState<HabiticaTag[]>([]);
-  const [isLoadingTags, setIsLoadingTags] = useState(true);
->>>>>>> contributions/merge-1779058516750
 
   useEffect(() => {
     loadTags();
@@ -84,7 +64,6 @@ export default function Command() {
 
     if (values.notes?.trim()) body.notes = values.notes.trim();
     if (values.priority) body.priority = parseFloat(values.priority);
-<<<<<<< HEAD
     if (values.attribute) body.attribute = values.attribute as TaskAttribute;
 
     if (taskType === "todo") {
@@ -103,19 +82,10 @@ export default function Command() {
       if (items.length > 0) body.checklist = items;
     }
 
-=======
-
-    const dueDate = toHabiticaDate(values.date);
-    if (dueDate) body.date = dueDate;
-
-    if (values.tags?.length > 0) body.tags = values.tags;
-
->>>>>>> contributions/merge-1779058516750
     try {
       await showToast({ style: Toast.Style.Animated, title: "Creating task…" });
       await createTask(body);
       await showToast({ style: Toast.Style.Success, title: "Task created!" });
-<<<<<<< HEAD
 
       if (onCreated) {
         onCreated();
@@ -124,10 +94,6 @@ export default function Command() {
         const targetCommand = TYPE_TO_COMMAND[taskType] ?? "view-tasks";
         await launchCommand({ name: targetCommand, type: LaunchType.UserInitiated });
       }
-=======
-      const targetCommand = TYPE_TO_COMMAND[taskType] ?? "view-tasks";
-      await launchCommand({ name: targetCommand, type: LaunchType.UserInitiated });
->>>>>>> contributions/merge-1779058516750
     } catch (error) {
       await showToast({
         style: Toast.Style.Failure,
@@ -148,11 +114,7 @@ export default function Command() {
     >
       <Form.TextField id="text" title="Title" placeholder="What do you need to do?" autoFocus />
 
-<<<<<<< HEAD
       <Form.Dropdown id="type" title="Type" value={type} onChange={setType}>
-=======
-      <Form.Dropdown id="type" title="Type" defaultValue="todo">
->>>>>>> contributions/merge-1779058516750
         <Form.Dropdown.Item value="todo" title="To-Do" />
         <Form.Dropdown.Item value="habit" title="Habit" />
         <Form.Dropdown.Item value="daily" title="Daily" />
@@ -160,7 +122,6 @@ export default function Command() {
 
       <Form.TextArea id="notes" title="Notes" placeholder="Additional details (optional)" />
 
-<<<<<<< HEAD
       {(type === "todo" || type === "daily") && (
         <Form.TextArea
           id="checklist"
@@ -170,8 +131,6 @@ export default function Command() {
         />
       )}
 
-=======
->>>>>>> contributions/merge-1779058516750
       <Form.Separator />
 
       <Form.Dropdown id="priority" title="Difficulty" defaultValue="1">
@@ -180,7 +139,6 @@ export default function Command() {
         ))}
       </Form.Dropdown>
 
-<<<<<<< HEAD
       <Form.Dropdown
         id="attribute"
         title="Attribute"
@@ -193,9 +151,6 @@ export default function Command() {
       </Form.Dropdown>
 
       {type === "todo" && <Form.DatePicker id="date" title="Due Date" type={Form.DatePicker.Type.Date} />}
-=======
-      <Form.DatePicker id="date" title="Due Date" type={Form.DatePicker.Type.Date} />
->>>>>>> contributions/merge-1779058516750
 
       <Form.Separator />
 

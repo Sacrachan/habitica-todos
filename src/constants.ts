@@ -19,7 +19,6 @@ export const TAG_FILTER_ALL = "all";
 
 /** Shared S3 asset base URL used by avatar and inventory. */
 export const ASSET_BASE_URL = "https://habitica-assets.s3.amazonaws.com/mobileApp/images/";
-<<<<<<< HEAD
 
 /** Skill definitions per class, sourced from habitica/website/common/script/content/spells.js. */
 export interface SkillDefinition {
@@ -101,5 +100,3 @@ export const ATTRIBUTE_OPTIONS: { value: string; title: string }[] = [
   { value: "per", title: "Perception" },
   { value: "con", title: "Constitution" },
 ];
-=======
->>>>>>> contributions/merge-1779058516750

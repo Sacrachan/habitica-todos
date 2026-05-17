@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { ActionPanel, Action, Icon, Grid, showToast, Toast, Alert, confirmAlert, useNavigation } from "@raycast/api";
 import { useEffect, useState, useCallback } from "react";
 import { getUser, equipItem, sellItem, openMysteryItem } from "./api";
@@ -6,13 +5,6 @@ import { HabiticaUser } from "./types";
 import { ASSET_BASE_URL } from "./constants";
 import HatchForm from "./hatch-form";
 import FeedForm from "./feed-form";
-=======
-import { ActionPanel, Action, Icon, Grid, showToast, Toast } from "@raycast/api";
-import { useEffect, useState, useCallback } from "react";
-import { getUser } from "./api";
-import { HabiticaUser } from "./types";
-import { ASSET_BASE_URL } from "./constants";
->>>>>>> contributions/merge-1779058516750
 
 type InventoryEntry = [key: string, count: number];
 
@@ -26,10 +18,7 @@ export default function Command() {
   const [user, setUser] = useState<HabiticaUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [category, setCategory] = useState("all");
-<<<<<<< HEAD
   const { push } = useNavigation();
-=======
->>>>>>> contributions/merge-1779058516750
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -46,7 +35,6 @@ export default function Command() {
     fetchData();
   }, [fetchData]);
 
-<<<<<<< HEAD
   async function handleSell(type: "eggs" | "hatchingPotions" | "food", key: string) {
     const confirmed = await confirmAlert({
       title: `Sell ${key}?`,
@@ -128,25 +116,12 @@ export default function Command() {
       key: "eggs",
       label: "Eggs",
       entries: eggEntries,
-=======
-  const items = user?.items;
-
-  const categories: { key: string; label: string; entries: InventoryEntry[]; imageUrl: (k: string) => string }[] = [
-    {
-      key: "eggs",
-      label: "Eggs",
-      entries: buildInventoryEntries(items?.eggs),
->>>>>>> contributions/merge-1779058516750
       imageUrl: (k) => `${ASSET_BASE_URL}Pet_Egg_${k}.png`,
     },
     {
       key: "potions",
       label: "Hatching Potions",
-<<<<<<< HEAD
       entries: potionEntries,
-=======
-      entries: buildInventoryEntries(items?.hatchingPotions),
->>>>>>> contributions/merge-1779058516750
       imageUrl: (k) => `${ASSET_BASE_URL}Pet_HatchingPotion_${k}.png`,
     },
     {
@@ -167,7 +142,6 @@ export default function Command() {
       entries: buildInventoryEntries(items?.quests),
       imageUrl: (k) => `${ASSET_BASE_URL}inventory_quest_scroll_${k}.png`,
     },
-<<<<<<< HEAD
     {
       key: "pets",
       label: "Pets",
@@ -180,14 +154,11 @@ export default function Command() {
       entries: mountEntries,
       imageUrl: (k) => `${ASSET_BASE_URL}Mount_Icon_${k}.png`,
     },
-=======
->>>>>>> contributions/merge-1779058516750
   ];
 
   const visibleCategories = category === "all" ? categories : categories.filter((c) => c.key === category);
   const isEmpty = visibleCategories.every((c) => c.entries.length === 0);
 
-<<<<<<< HEAD
   const pendingMystery = user?.purchased?.plan?.mysteryItems?.length ?? 0;
 
   const baseActions = (
@@ -200,10 +171,6 @@ export default function Command() {
           onAction={handleOpenMystery}
         />
       )}
-=======
-  const inventoryActions = (
-    <ActionPanel>
->>>>>>> contributions/merge-1779058516750
       <Action
         title="Refresh"
         icon={Icon.ArrowClockwise}
@@ -215,7 +182,6 @@ export default function Command() {
         url="https://habitica.com/inventory/items"
         shortcut={{ modifiers: ["cmd"], key: "o" }}
       />
-<<<<<<< HEAD
     </>
   );
 
@@ -301,11 +267,6 @@ export default function Command() {
     }
   }
 
-=======
-    </ActionPanel>
-  );
-
->>>>>>> contributions/merge-1779058516750
   return (
     <Grid
       isLoading={isLoading}
@@ -319,11 +280,8 @@ export default function Command() {
           <Grid.Dropdown.Item title="Pet Food and Saddles" value="food" />
           <Grid.Dropdown.Item title="Special" value="special" />
           <Grid.Dropdown.Item title="Quests" value="quests" />
-<<<<<<< HEAD
           <Grid.Dropdown.Item title="Pets" value="pets" />
           <Grid.Dropdown.Item title="Mounts" value="mounts" />
-=======
->>>>>>> contributions/merge-1779058516750
         </Grid.Dropdown>
       }
     >
@@ -334,7 +292,6 @@ export default function Command() {
           .filter((c) => c.entries.length > 0)
           .map((c) => (
             <Grid.Section key={c.key} title={`${c.label} (${c.entries.length})`}>
-<<<<<<< HEAD
               {c.entries.map(([key, count]) => {
                 const equippedSuffix =
                   (c.key === "pets" && items?.currentPet === key) || (c.key === "mounts" && items?.currentMount === key)
@@ -350,17 +307,6 @@ export default function Command() {
                   />
                 );
               })}
-=======
-              {c.entries.map(([key, count]) => (
-                <Grid.Item
-                  key={`${c.key}-${key}`}
-                  title={key}
-                  subtitle={`×${count}`}
-                  content={c.imageUrl(key)}
-                  actions={inventoryActions}
-                />
-              ))}
->>>>>>> contributions/merge-1779058516750
             </Grid.Section>
           ))
       )}
